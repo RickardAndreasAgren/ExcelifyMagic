@@ -1,0 +1,57 @@
+{
+  "name": "excelifymagic",
+  "version": "0.0.1",
+  "description": "Used to build excel table from mtgjson with the columns of your choice. Handy for building inventory sheets.",
+  "author": "Rickard Ågren",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OfficeDev/Office-Addin-TaskPane-JS.git"
+  },
+  "license": "MIT",
+  "config": {
+    "app-to-debug": "excel",
+    "app-type-to-debug": "desktop",
+    "dev-server-port": 3000
+  },
+  "scripts": {
+    "build": "webpack -p --mode production --https false",
+    "build:dev": "webpack --mode development --https false",
+    "build-dev": "webpack --mode development --https false && echo . && echo . && echo . && echo Please use 'build:dev' instead of 'build-dev'.",
+    "dev-server": "webpack-dev-server --mode development",
+    "sideload": "office-toolbox sideload -m manifest.xml -a excel",
+    "start": "office-addin-debugging start manifest.xml",
+    "start:desktop": "office-addin-debugging start manifest.xml desktop",
+    "start:web": "office-addin-debugging start manifest.xml web",
+    "stop": "office-addin-debugging stop manifest.xml",
+    "unload": "office-toolbox remove -m manifest.xml -a excel",
+    "validate": "office-toolbox validate -m manifest.xml",
+    "watch": "webpack --mode development --watch"
+  },
+  "dependencies": {
+    "mtgjson": "^3.8.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.5.4",
+    "@babel/polyfill": "^7.4.4",
+    "@babel/preset-env": "^7.5.4",
+    "@types/office-js": "^1.0.19",
+    "@types/office-runtime": "^1.0.8",
+    "babel-loader": "^8.0.6",
+    "clean-webpack-plugin": "^3.0.0",
+    "copy-webpack-plugin": "^5.0.3",
+    "file-loader": "^4.0.0",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "office-addin-debugging": "^2.4.2",
+    "office-addin-dev-certs": "^1.3.2",
+    "office-toolbox": "^0.2.1",
+    "prettier": "^1.18.2",
+    "source-map-loader": "^0.2.4",
+    "ts-loader": "^6.0.4",
+    "typescript": "^3.5.3",
+    "webpack": "^4.35.3",
+    "webpack-cli": "^3.3.6",
+    "webpack-dev-server": "^3.7.2"
+  }
+}
