@@ -17,11 +17,11 @@ const configs = {
   },
 };
 
-function mtgjson(callback) {
-  const URL = configs[TARGET].URL;
-  const DATA_FILE = configs[TARGET].DATA_FILE;
-  const ETAG_FILE = configs[TARGET].ETA_FILE;
+const URL = configs[TARGET]['URL'];
+const DATA_FILE = configs[TARGET]['DATA_FILE'];
+const ETAG_FILE = configs[TARGET]['ETAG_FILE'];
 
+function mtgjson(callback) {
   fs.readFile(ETAG_FILE, function(err, data) {
     if (err) {
       return callback(err);
@@ -42,7 +42,7 @@ function mtgjson(callback) {
       console.log(res.statusCode);
       var noInternetConnection = !!err;
       if (noInternetConnection || res.statusCode === 304) {
-        return fs.readFile(ACTIVE_FILE, function(err, data) {
+        return fs.readFile(DATA_FILE, function(err, data) {
           if (err) {
             return callback(err);
           }
@@ -52,7 +52,7 @@ function mtgjson(callback) {
         });
       }
 
-      fs.writeFile(ACTIVE_FILE, res.body, function(err) {
+      fs.writeFile(DATA_FILE, res.body, function(err) {
         if (err) {
           return callback(err);
         }

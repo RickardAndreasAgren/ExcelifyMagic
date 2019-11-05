@@ -1,6 +1,6 @@
 
 
-import '../data/allsets.json'
+import '../data/pioneer.json'
 
 export async function buildSelector() {
   return 0;
