@@ -1,5 +1,5 @@
 var req = require('request');
-var fs = require('fs');
+var fs = require('fs').promises;
 var path = require('path');
 
 const TARGET = 'pioneer'; // 'all' || 'pioneer'
@@ -10,73 +10,99 @@ const configs = {
     DATA_FILE: path.join(__dirname, 'src/data/allsets.json'),
     ETAG_FILE: path.join(__dirname, 'src/data/allsets.etag'),
   },
-  pioneer: {
+  pioneercards: {
     URL: 'http://mtgjson.com/json/PioneerCards.json',
-    DATA_FILE: path.join(__dirname, 'src/data/pioneer.json'),
-    ETAG_FILE: path.join(__dirname, 'src/data/pioneer.etag'),
+    DATA_FILE: path.join(__dirname, 'src/data/pioneercards.json'),
+    ETAG_FILE: path.join(__dirname, 'src/data/pioneercards.etag'),
+  },
+  pioneerprints: {
+    URL: 'http://mtgjson.com/json/PioneerPrintings.json',
+    DATA_FILE: path.join(__dirname, 'src/data/pioneerprints.json'),
+    ETAG_FILE: path.join(__dirname, 'src/data/pioneerprints.etag'),
   },
 };
 
-const URL = configs[TARGET]['URL'];
-const DATA_FILE = configs[TARGET]['DATA_FILE'];
-const ETAG_FILE = configs[TARGET]['ETAG_FILE'];
-
-function mtgjson(callback) {
-  fs.readFile(ETAG_FILE, function(err, data) {
-    if (err) {
-      return callback(err);
-    }
-    console.log('No error');
-    var localEtag = data.toString();
-
-    var options = {};
-    if (localEtag) {
-      options.headers = { 'if-none-match': localEtag };
-    }
-    req(URL, options, function(err, res) {
-      console.log('Request sent, got');
-      console.log(!!res);
-      console.log('Error is');
-      console.log(err ? err : 'nothing');
-      console.log('SCode');
-      console.log(res.statusCode);
-      var noInternetConnection = !!err;
-      if (noInternetConnection || res.statusCode === 304) {
-        return fs.readFile(DATA_FILE, function(err, data) {
-          if (err) {
-            return callback(err);
-          }
-          console.log('Readfile success');
-
-          callback(null, JSON.parse(data));
-        });
+function mtgjson(useConfig, callback) {
+  return new Promise((resolve, reject) => {
+    const URL = useConfig['URL'];
+    const DATA_FILE = useConfig['DATA_FILE'];
+    const ETAG_FILE = useConfig['ETAG_FILE'];
+    return fs.readFile(ETAG_FILE).then(data => {
+      if (data.err) {
+        return { err: err };
       }
+      console.log('No error');
+      var localEtag = data.toString();
 
-      fs.writeFile(DATA_FILE, res.body, function(err) {
-        if (err) {
-          return callback(err);
+      var options = {};
+      if (localEtag) {
+        options.headers = { 'if-none-match': localEtag };
+      }
+      req(URL, options, function(err, res) {
+        console.log('Request sent, got');
+        console.log(!!res);
+        console.log('Error is');
+        console.log(err ? err : 'nothing');
+        console.log('SCode');
+        console.log(res.statusCode);
+        var noInternetConnection = !!err;
+        if (noInternetConnection || res.statusCode === 304) {
+          fs.readFile(DATA_FILE)
+            .then(data => {
+              if (data && data.err) {
+                reject(data.err);
+              }
+              console.log('Readfile success');
+
+              resolve(JSON.parse(data));
+            })
+            .catch(error => {
+              console.log('EEEK');
+              console.log(error);
+            });
         }
 
-        fs.writeFile(ETAG_FILE, res.headers.etag, function(err) {
-          if (err) {
-            return callback(err);
-          }
+        fs.writeFile(DATA_FILE, res.body)
+          .then(data => {
+            if (data && data.err) {
+              reject(data.err);
+            }
 
-          callback(null, JSON.parse(res.body));
-        });
+            fs.writeFile(ETAG_FILE, res.headers.etag)
+              .then(data => {
+                if (data && data.err) {
+                  reject(data.err);
+                }
+
+                resolve(JSON.parse(res.body));
+              })
+              .catch(error => {
+                console.log('EEEK');
+                console.log(error);
+              });
+          })
+
+          .catch(error => {
+            console.log('EEEK');
+            console.log(error);
+          });
       });
     });
-  });
+  })
+    .then(data => {
+      return data;
+    })
+    .catch(error => {
+      console.log('BAD STUFF');
+      console.log(error);
+    });
 }
 
-function go() {
-  mtgjson(function(err, data) {
-    if (err) {
-      return console.log(err);
-    }
-    // Console.log(data.ELD.cards);
+async function go() {
+  mtgjson(configs.pioneerprints).then(cards => {
+    console.log(!!cards);
     console.log('Done');
-    // Prints out all cards from the Limited Edition Alpha (LEA) set
+    // Cards is object, not JSON already
   });
 }
 

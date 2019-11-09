@@ -52,13 +52,19 @@ module.exports = async (env, options) => {
           to: 'taskpane.css',
           from: './src/taskpane/taskpane.css',
         },
+      ]),/*
+      New CopyWebpackPlugin([
+        {
+          to: 'pioneer.json',
+          from: './src/data/pioneer.json',
+        },
       ]),
       new CopyWebpackPlugin([
         {
           to: 'allsets.json',
           from: './src/data/allsets.json',
         },
-      ]),
+      ]),*/
       new HtmlWebpackPlugin({
         filename: 'commands.html',
         template: './src/commands/commands.html',

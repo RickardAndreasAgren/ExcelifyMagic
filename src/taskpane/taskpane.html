@@ -32,31 +32,48 @@
     <main id="app-body" class="ms-welcome__main" style="display: none;">
         <ul class="ms-List ms-welcome__features">
             <li class="ms-ListItem">
-                <span class="ms-font-m">Name</span>
+                <span class="ms-font-m">
+                  Name
+                  <input type="checkbox" id="cbname" name="name" value="name">
+                </span>
             </li>
             <li class="ms-ListItem">
-                <span class="ms-font-m">Color</span>
+                <span class="ms-font-m">Color
+                <input type="checkbox" id="cbcolor" name="color" value="color">
+              </span>
             </li>
             <li class="ms-ListItem">
-                <span class="ms-font-m">Converted Mana Cost</span>
+                <span class="ms-font-m">Converted Mana Cost
+                <input type="checkbox" id="cbcmc" name="cmc" value="cmc">
+              </span>
             </li>
             <li class="ms-ListItem">
-                <span class="ms-font-m">Type</span>
+                <span class="ms-font-m">Type
+                <input type="checkbox" id="cbtype" name="type" value="type">
+              </span>
             </li>
             <li class="ms-ListItem">
-                <span class="ms-font-m">Subtype</span>
+                <span class="ms-font-m">Subtype
+                <input type="checkbox" id="cbsubtype" name="subtype" value="subtype">
+              </span>
             </li>
             <li class="ms-ListItem">
-                <span class="ms-font-m">Strength (P/T) or Loyalty</span>
+                <span class="ms-font-m">Strength (P/T) or Loyalty
+                <input type="checkbox" id="cbstats" name="stats" value="stats">
+              </span>
             </li>
         </ul>
         <div role="select" id="selectset" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
           <select id="setselector">
-            <option value="dummy">Test display</option>
+            <option id="toberemoved" value="dummy">Test display</option>
           </select>
         </div>
         <div role="button" id="testchange" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
             <span class="ms-Button-label">Test</span>
+        </div>
+        <div role="button" id="testactives" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
+            <span class="ms-Button-label">Selected</span>
+              <p class="ms-font-l" id="selectionpoint"></p>
         </div>
         <div>
           <p class="ms-font-l">Error display here </p>
