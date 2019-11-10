@@ -6,15 +6,18 @@ import optionText from './optionText.js';
 */
 
 class Sortkeeper {
-  constructor(name) {
+  constructor(name, activator) {
     this.id = name;
+    this.aid = activator;
     this.options = {};
     this.selected = '';
     this.override = null;
+    this.active = false;
 
     this.setOverride = this.setOverride.bind(this);
     this.overrideOption = this.overrideOption.bind(this);
     this.triggerOnChange = this.triggerOnChange.bind(this);
+    this.isActiveChange = this.isActiveChange.bind(this);
     this.removeOption = this.removeOption.bind(this);
     this.addOption = this.addOption.bind(this);
     this.getSelected = this.getSelected.bind(this);
@@ -32,6 +35,13 @@ class Sortkeeper {
   activateOnChange() {
     const myNode = document.getElementById(this.id);
     myNode.onchange = this.triggerOnChange;
+    const aNode = document.getElementById(this.aid);
+    aNode.onchange = this.isActiveChange;
+  }
+
+  isActiveChange() {
+    const aNode = document.getElementById(this.aid);
+    this.active = aNode.checked;
   }
 
   triggerOnChange() {
@@ -53,21 +63,23 @@ class Sortkeeper {
   }
 
   removeOption(optionName) {
-    if (this.options.optionName) {
+    if (this.options[optionName]) {
       if (Object.keys(this.options).length === 1) {
         this.selected = '';
       }
-      delete this.options.optionName;
+
+      delete this.options[optionName];
       if (this.selected === optionName) {
         this.selected = this.options[Object.keys(this.options)[0]];
       }
 
       const myNode = document.getElementById(this.id);
       let removeThis = myNode.options.namedItem(optionName);
-      myNode.remove(optionName.index);
+      myNode.remove(removeThis.index);
       let toBeSelected = myNode.options.namedItem(this.selected);
-      myNode.selectedIndex(toBeSelected.index);
+      myNode.selectedIndex = toBeSelected;
     }
+    return 0;
   }
 
   addOption(optionName) {

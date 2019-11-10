@@ -6,8 +6,8 @@ var primaryKeeper;
 var secondaryKeeper;
 
 export async function initKeepers() {
-  primaryKeeper = new Sortkeeper('primarysort');
-  secondaryKeeper = new Sortkeeper('secondarysort');
+  primaryKeeper = new Sortkeeper('primarysort','psortactive');
+  secondaryKeeper = new Sortkeeper('secondarysort','ssortactive');
   primaryKeeper.setOverride(secondaryKeeper.overrideOption);
   secondaryKeeper.setOverride(primaryKeeper.overrideOption);
 }
@@ -32,8 +32,12 @@ export async function sortOptionsUpdate(option, add) {
     primaryKeeper.addOption(option);
     secondaryKeeper.addOption(option);
   } else {
-    primaryKeeper.removeOption(option);
-    secondaryKeeper.removeOption(option);
+    try {
+      primaryKeeper.removeOption(option);
+      secondaryKeeper.removeOption(option);
+    } catch (error) {
+      printui(error.message + ' Stack: ' + error.stack)
+    }
   }
   return 0;
 }
