@@ -3,83 +3,133 @@
 
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Contoso Task Pane Add-in</title>
 
     <!-- Office JavaScript API -->
-    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+    <script
+      type="text/javascript"
+      src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"
+    ></script>
     <!--<script type="text/javascript" src="https://localhost:3000/api/excelifyapi.js"></script>-->
 
     <!-- For more information on Office UI Fabric, visit https://developer.microsoft.com/fabric. -->
-    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.1/css/fabric.min.css"/>
+    <link
+      rel="stylesheet"
+      href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.1/css/fabric.min.css"
+    />
 
     <!-- Template styles -->
     <link href="taskpane.css" rel="stylesheet" type="text/css" />
-</head>
+  </head>
 
-<body class="ms-font-m ms-welcome ms-Fabric">
+  <body class="ms-font-m ms-welcome ms-Fabric">
     <header class="ms-welcome__header ms-bgColor-neutralLighter">
-        <img width="90" height="90" src="../../assets/logo-filled.png" alt="Contoso" title="Contoso" />
-        <h1 class="ms-font-su">Welcome</h1>
+      <img
+        width="90"
+        height="90"
+        src="../../assets/logo-filled.png"
+        alt="Contoso"
+        title="Contoso"
+      />
+      <h1 class="ms-font-su">Welcome</h1>
     </header>
     <section id="sideload-msg" class="ms-welcome__main">
-        <h2 class="ms-font-xl">Please sideload your add-in to see app body.</h2>
+      <h2 class="ms-font-xl">Please sideload your add-in to see app body.</h2>
     </section>
     <main id="app-body" class="ms-welcome__main" style="display: none;">
-        <ul class="ms-List ms-welcome__features">
-            <li class="ms-ListItem">
-                <span class="ms-font-m">
-                  Name
-                  <input type="checkbox" id="cbname" name="name" value="name">
-                </span>
-            </li>
-            <li class="ms-ListItem">
-                <span class="ms-font-m">Color
-                <input type="checkbox" id="cbcolor" name="color" value="color">
-              </span>
-            </li>
-            <li class="ms-ListItem">
-                <span class="ms-font-m">Converted Mana Cost
-                <input type="checkbox" id="cbcmc" name="cmc" value="cmc">
-              </span>
-            </li>
-            <li class="ms-ListItem">
-                <span class="ms-font-m">Type
-                <input type="checkbox" id="cbtype" name="type" value="type">
-              </span>
-            </li>
-            <li class="ms-ListItem">
-                <span class="ms-font-m">Subtype
-                <input type="checkbox" id="cbsubtype" name="subtype" value="subtype">
-              </span>
-            </li>
-            <li class="ms-ListItem">
-                <span class="ms-font-m">Strength (P/T) or Loyalty
-                <input type="checkbox" id="cbstats" name="stats" value="stats">
-              </span>
-            </li>
-        </ul>
-        <div role="select" id="selectset" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
-          <select id="setselector">
-            <option id="toberemoved" value="dummy">Test display</option>
-          </select>
-        </div>
-        <div role="button" id="testchange" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
-            <span class="ms-Button-label">Test</span>
-        </div>
-        <div role="button" id="testactives" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
-            <span class="ms-Button-label">Selected</span>
-              <p class="ms-font-l" id="selectionpoint"></p>
-        </div>
-        <div>
-          <p class="ms-font-l">Error display here </p>
-            <p class="ms-font-l" id="errorpoint"></p>
-         </div>
+      <ul class="ms-List ms-welcome__features">
+        <li class="ms-ListItem">
+          <span class="ms-font-m">
+            Name
+            <input type="checkbox" id="cbname" name="name" value="name" />
+          </span>
+        </li>
+        <li class="ms-ListItem">
+          <span class="ms-font-m">
+            Number
+            <input type="checkbox" id="cbnumber" name="number" value="number" />
+          </span>
+        </li>
+        <li class="ms-ListItem">
+          <span class="ms-font-m"
+            >Color
+            <input type="checkbox" id="cbcolor" name="color" value="color" />
+          </span>
+        </li>
+        <li class="ms-ListItem">
+          <span class="ms-font-m"
+            >Converted Mana Cost
+            <input type="checkbox" id="cbcmc" name="cmc" value="cmc" />
+          </span>
+        </li>
+        <li class="ms-ListItem">
+          <span class="ms-font-m"
+            >Type
+            <input type="checkbox" id="cbtype" name="type" value="type" />
+          </span>
+        </li>
+        <li class="ms-ListItem">
+          <span class="ms-font-m">
+            Subtype
+            <input
+              type="checkbox"
+              id="cbsubtype"
+              name="subtype"
+              value="subtype"
+            />
+          </span>
+        </li>
+        <li class="ms-ListItem">
+          <span class="ms-font-m"
+            >Strength (P/T) or Loyalty
+            <input type="checkbox" id="cbstats" name="stats" value="stats" />
+          </span>
+        </li>
+      </ul>
+      <div
+        role="select"
+        id="selectset"
+        class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl"
+      >
+        <select id="primarysort"> </select>
+        <select id="secondarysort"> </select>
+      </div>
+      <div
+        role="select"
+        id="selectset"
+        class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl"
+      >
+        <select id="setselector">
+          <option id="toberemoved" value="dummy">Test display</option>
+        </select>
+      </div>
+      <div
+        role="button"
+        id="testchange"
+        class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl"
+      >
+        <span class="ms-Button-label">Test</span>
+      </div>
+      <div
+        role="button"
+        id="testactives"
+        class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl"
+      >
+        <span class="ms-Button-label">Selected</span>
+        <p class="ms-font-l" id="selectionpoint"></p>
+      </div>
+      <div>
+        <p class="ms-font-l">Error display here</p>
+        <p class="ms-font-l" id="errorpoint"></p>
+      </div>
+      <div>
+        <p class="ms-font-l">Log display here</p>
+        <p class="ms-font-l" id="logpoint"></p>
+      </div>
     </main>
-</body>
-
+  </body>
 </html>

@@ -5,7 +5,14 @@
  */
 
 import printcell from '../util/printcell.js';
-import { buildSelector, setOptions } from '../api/excelifyapi.js';
+import printui from '../util/printui.js';
+import {logui} from '../util/printui.js';
+import {
+  sortOptionsUpdate,
+  buildSelector,
+  setOptions,
+  initKeepers
+} from '../api/excelifyapi.js';
 
 var selectedFields = {};
 
@@ -15,6 +22,7 @@ Office.onReady(info => {
   if (info.host === Office.HostType.Excel) {
     selectedFields = {
       cbname: false,
+      cbnumber: false,
       cbcolor: false,
       cbcmc: false,
       cbtype: false,
@@ -24,6 +32,7 @@ Office.onReady(info => {
 
     checkBoxes = [
       'cbname',
+      'cbnumber',
       'cbcolor',
       'cbcmc',
       'cbtype',
@@ -35,6 +44,8 @@ Office.onReady(info => {
     document.getElementById('testchange').onclick = testchange;
     document.getElementById('testactives').onclick = testactives;
 
+    logui('Testing the thing')
+
     let sets = setOptions()
       .then(options => {
         for (let set = 0; set < options.length; set++) {
@@ -44,16 +55,23 @@ Office.onReady(info => {
           document.getElementById('setselector').add(newOption, null);
         }
         document.getElementById('toberemoved').remove();
+        initKeepers();
         return options;
       })
       .then(() => {
         for (var i = 0; i < checkBoxes.length; i++) {
           let target = Object.assign({}, { name: checkBoxes[i] });
           document.getElementById(target.name).onchange = function() {
-            document.getElementById('errorpoint').innerHTML = JSON.stringify(
+            /* Document.getElementById('errorpoint').innerHTML = JSON.stringify(
               target.name
-            );
+            );*/
             selectedFields[target.name] = !selectedFields[target.name];
+            try {
+              sortOptionsUpdate(target.name, !!selectedFields[target.name]);
+            } catch (error) {
+              document.getElementById('errorpoint').innerHTML = JSON.stringify(
+                {err: error.message, stack: error.stack})
+            }
           };
         }
         return 0;
