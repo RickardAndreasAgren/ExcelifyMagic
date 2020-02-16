@@ -4,7 +4,7 @@
  * See LICENSE in the project root for license information.
  */
 
-import printcell from '../util/printcell.js';
+import {printcellTest, printcell} from '../util/printcell.js';
 import printui from '../util/printui.js';
 import {logui} from '../util/printui.js';
 import {
@@ -17,6 +17,17 @@ import {
 var selectedFields = {};
 
 var checkBoxes = [];
+
+/******************************************
+Importing logic above.
+
+Set up when office application fires onReady.
+Define variables and initial procedure and attach
+functions to triggers & events.
+
+ dot.html&css file represents active taskpane and
+can be targeted by .js from this scope.
+******************************************/
 
 Office.onReady(info => {
   if (info.host === Office.HostType.Excel) {
@@ -42,7 +53,10 @@ Office.onReady(info => {
     document.getElementById('sideload-msg').style.display = 'none';
     document.getElementById('app-body').style.display = 'flex';
     document.getElementById('testchange').onclick = testchange;
-    document.getElementById('testactives').onclick = testactives;
+    document.getElementById('testactives').onclick = getSelectedProps()
+    .then(printThis => {
+      document.getElementById('selectionpoint').innerHTML = printThis;
+    })
 
     logui('Testing the thing')
 
@@ -91,12 +105,20 @@ Office.onReady(info => {
   }
 });
 
-export async function testactives() {
+/***************************
+Define functions to be used by triggers
+***************************/
+
+export async function getSelectedProps() {
   let stringed = '';
   for (let i in selectedFields) {
     stringed += i + ' ' + selectedFields[i] + ' ';
   }
-  document.getElementById('selectionpoint').innerHTML = stringed;
+  return stringed;
+}
+
+export async function buildSet() {
+
 }
 
 export async function testchange() {

@@ -3,18 +3,26 @@
  * See LICENSE in the project root for license information.
  */
 
- html,
- body {
-     width: 100%;
-     height: 100%;
-     margin: 0;
-     padding: 0;
- }
+html,
+body {
+   width: 100%;
+   height: 100%;
+   margin: 0;
+   padding: 0;
+}
 
- ul {
-     margin: 0;
-     padding: 0;
- }
+ul {
+   margin: 0;
+   padding: 0;
+}
+
+.ms-ListItem span {
+  width: 100%;
+}
+
+.ms-ListItem input {
+  float: right;
+}
 
  .ms-welcome__header {
     padding: 20px;
