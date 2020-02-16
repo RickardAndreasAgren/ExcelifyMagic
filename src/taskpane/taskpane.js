@@ -7,6 +7,7 @@
 import {printcellTest, printcell} from '../util/printcell.js';
 import printui from '../util/printui.js';
 import {logui} from '../util/printui.js';
+import optionText from '../api/optionText.js';
 import {
   sortOptionsUpdate,
   buildSelector,
@@ -53,12 +54,10 @@ Office.onReady(info => {
     document.getElementById('sideload-msg').style.display = 'none';
     document.getElementById('app-body').style.display = 'flex';
     document.getElementById('testchange').onclick = testchange;
-    document.getElementById('testactives').onclick = getSelectedProps()
-    .then(printThis => {
-      document.getElementById('selectionpoint').innerHTML = printThis;
-    })
+    document.getElementById('testactives').onclick = propsOn;
 
-    logui('Testing the thing')
+
+    logui('Testing the thing');
 
     let sets = setOptions()
       .then(options => {
@@ -69,6 +68,7 @@ Office.onReady(info => {
           document.getElementById('setselector').add(newOption, null);
         }
         document.getElementById('toberemoved').remove();
+        document.getElementById('selectionpoint').innerHTML = '';
         initKeepers();
         return options;
       })
@@ -109,12 +109,24 @@ Office.onReady(info => {
 Define functions to be used by triggers
 ***************************/
 
-export async function getSelectedProps() {
+async function getSelectedProps() {
   let stringed = '';
   for (let i in selectedFields) {
-    stringed += i + ' ' + selectedFields[i] + ' ';
+    stringed += optionText[i] + ':' + selectedFields[i] + ', <br/>';
   }
   return stringed;
+}
+
+export async function propsOn() {
+  return getSelectedProps()
+  .then((printThis) => {
+    document.getElementById('selectionpoint').innerHTML = printThis;
+    return 0;
+  })
+  .catch(error => {
+    logui(error);
+    return 0;
+  })
 }
 
 export async function buildSet() {

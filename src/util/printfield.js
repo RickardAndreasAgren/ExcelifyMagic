@@ -5,10 +5,7 @@ async function validateFieldprint(source, target) {
 
 async function printfield(
   twoDimArray, toWriteOn, column = 0, row = 0, context) {
-  // Check if:
-  // worksheet get A1
-  // range get first
-  // cell, use it
+  // Check if
   var toPrint = '';
   if (typeof msg !== 'string') {
     toPrint = JSON.stringify(msg);
