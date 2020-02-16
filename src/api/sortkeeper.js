@@ -47,18 +47,25 @@ class Sortkeeper {
   triggerOnChange() {
     const myNode = document.getElementById(this.id);
     let newSelection = myNode.options[myNode.selectedIndex];
-    this.selected = newSelection.text;
+    this.selected = newSelection.value;
     if (this.override) {
-      let o = this.override(newSelection.text);
+      let o = this.override(newSelection.value);
     }
   }
 
   overrideOption(selectedName) {
     const myNode = document.getElementById(this.id);
     if (this.selected === selectedName) {
-      this.selected = this.options[Object.keys(this.options)[0]];
+      let selected = 0;
+      for (let i = 0; i < Object.keys(this.options).length; i++) {
+        if (this.options[Object.keys(this.options)[i]]
+          !== selectedName) {
+          this.selected = this.options[Object.keys(this.options)[i]];
+          break;
+        }
+      }
       let toBeSelected = myNode.options.namedItem(this.selected);
-      myNode.selectedIndex = toBeSelected;
+      myNode.selectedIndex = toBeSelected.index;
     }
   }
 
