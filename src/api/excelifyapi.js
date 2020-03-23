@@ -12,15 +12,17 @@ export async function initKeepers() {
   secondaryKeeper.setOverride(primaryKeeper.overrideOption);
 }
 
-export async function buildSelector() {
-  return 0;
+export async function getSetData(set) {
+  logui(typeof pioneer);
+  logui(Array.isArray(pioneer));
+  return pioneer[set];
 }
 
 export async function setOptions() {
   let pObject = pioneer;
   let setsList = [];
   for (let set in pObject) {
-    logui(set);
+    // Logui(set);
     setsList.push({ type: pObject[set].code, name: pObject[set].name });
   }
   setsList.sort();
@@ -31,6 +33,9 @@ export async function sortOptionsUpdate(option, add) {
   if (add) {
     primaryKeeper.addOption(option);
     secondaryKeeper.addOption(option);
+    if (primaryKeeper.getSelected() === secondaryKeeper.getSelected()) {
+      primaryKeeper.triggerOnChange(option);
+    }
   } else {
     try {
       primaryKeeper.removeOption(option);

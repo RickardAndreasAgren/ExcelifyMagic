@@ -1,5 +1,5 @@
 
-async function printui(msg) {
+async function printerror(msg) {
   var toPrint = '';
   if (typeof msg !== 'string') {
     toPrint = JSON.stringify(msg);
@@ -27,4 +27,4 @@ export async function logui(msg) {
   return 0;
 }
 
-export default printui;
+export default printerror;

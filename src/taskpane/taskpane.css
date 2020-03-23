@@ -25,9 +25,7 @@ ul {
 }
 
  .ms-welcome__header {
-    padding: 20px;
-    padding-bottom: 10px;
-    padding-top: 30px;
+    padding: 10px;
     display: -webkit-flex;
     display: flex;
     -webkit-flex-direction: column;

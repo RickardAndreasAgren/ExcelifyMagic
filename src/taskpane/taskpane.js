@@ -5,14 +5,15 @@
  */
 
 import {printcellTest, printcell} from '../util/printcell.js';
-import printui from '../util/printui.js';
+import printerror from '../util/printui.js';
 import {logui} from '../util/printui.js';
 import optionText from '../api/optionText.js';
 import {
   sortOptionsUpdate,
   buildSelector,
   setOptions,
-  initKeepers
+  initKeepers,
+  getSetData
 } from '../api/excelifyapi.js';
 
 var selectedFields = {};
@@ -59,9 +60,7 @@ Office.onReady(info => {
 
     document.getElementById('sideload-msg').style.display = 'none';
     document.getElementById('app-body').style.display = 'flex';
-    document.getElementById('testchange').onclick = testchange;
-    document.getElementById('testactives').onclick = propsOn;
-    document.getElementById('buildset').onclick = buildset;
+    document.getElementById('buildset').onclick = renderSetCards;
 
 
 
@@ -78,7 +77,7 @@ Office.onReady(info => {
         initKeepers();
         return options;
       })
-      .then(() => {
+      .then((options) => {
         for (var i = 0; i < checkBoxes.length; i++) {
           let target = Object.assign({}, { name: checkBoxes[i] });
           document.getElementById(target.name).onchange = function() {
@@ -94,7 +93,7 @@ Office.onReady(info => {
             }
           };
         }
-        return 0;
+        return options;
       })
       .catch(error => {
         /*
@@ -127,18 +126,42 @@ async function getSelectedProps() {
 }
 
 async function buildSet() {
-  var activeSet = document.getElementById('setselector').value;
-  var activeProps = getSelectedProps();
+  let setlist = document.getElementById('setselector');
+  var activeSet = setlist[setlist.selectedIndex].value;
 
-  return {set: activeSet, props: activeProps};
+  return getSelectedProps()
+  .then((props) => {
+    return {set: activeSet, props: props};
+  })
 }
 
 export async function renderSetCards() {
   return buildSet()
   .then((data) => {
-    // Create new sheet
-    // name according to shorting
-    //
+
+    return Excel.run(function(context) {
+      var sheets = context.workbook.worksheets;
+
+      var sheet = sheets.add(data.set);
+      sheet.activate();
+      sheet.load('name, position');
+      sheet.position = 0;
+      return context.sync()
+          .then(function() {
+              logui(`Added worksheet named "${sheet.name}" in position ${sheet.position}`);
+              return data;
+            });
+    })
+  })
+  .then((data) => {
+
+    return getSetData(data.set)
+    .then((setData) => {
+      let cardsList = setData.cards;
+      for (let i = 0; i < cardsList.length; i++) {
+        // CARDS ARE HERE
+      }
+    });
     // Build multidimensional array
     //     use prop selector for each card
     //     add "Count" field
@@ -146,6 +169,12 @@ export async function renderSetCards() {
     // insert set
     // check length, define range of inserted set
 
+  }).catch((error) => {
+    if (error.code === 'ItemAlreadyExists') {
+      printerror('Worksheet name is occupied.');
+    } else {
+      printerror(error);
+    }
   })
 }
 
