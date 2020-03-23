@@ -19,6 +19,30 @@ var selectedFields = {};
 
 var checkBoxes = [];
 
+var sets = [];
+
+var currentSet;
+
+var selectedFields = {
+    cbname: false,
+    cbnumber: false,
+    cbcolor: false,
+    cbcmc: false,
+    cbtype: false,
+    cbsubtype: false,
+    cbstats: false,
+  };
+
+var checkBoxes = [
+  'cbname',
+  'cbnumber',
+  'cbcolor',
+  'cbcmc',
+  'cbtype',
+  'cbsubtype',
+  'cbstats',
+];
+
 /******************************************
 Importing logic above.
 
@@ -32,34 +56,16 @@ can be targeted by .js from this scope.
 
 Office.onReady(info => {
   if (info.host === Office.HostType.Excel) {
-    selectedFields = {
-      cbname: false,
-      cbnumber: false,
-      cbcolor: false,
-      cbcmc: false,
-      cbtype: false,
-      cbsubtype: false,
-      cbstats: false,
-    };
 
-    checkBoxes = [
-      'cbname',
-      'cbnumber',
-      'cbcolor',
-      'cbcmc',
-      'cbtype',
-      'cbsubtype',
-      'cbstats',
-    ];
     document.getElementById('sideload-msg').style.display = 'none';
     document.getElementById('app-body').style.display = 'flex';
     document.getElementById('testchange').onclick = testchange;
     document.getElementById('testactives').onclick = propsOn;
+    document.getElementById('buildset').onclick = buildset;
 
 
-    logui('Testing the thing');
 
-    let sets = setOptions()
+    sets = setOptions()
       .then(options => {
         for (let set = 0; set < options.length; set++) {
           let newOption = document.createElement('option');
@@ -109,7 +115,41 @@ Office.onReady(info => {
 Define functions to be used by triggers
 ***************************/
 
+
 async function getSelectedProps() {
+  let activeProps = [];
+  for (let i in selectedFields) {
+    if (selectedFields[i]) {
+      activeProps.push(optionText[i]);
+    }
+  }
+  return activeProps;
+}
+
+async function buildSet() {
+  var activeSet = document.getElementById('setselector').value;
+  var activeProps = getSelectedProps();
+
+  return {set: activeSet, props: activeProps};
+}
+
+export async function renderSetCards() {
+  return buildSet()
+  .then((data) => {
+    // Create new sheet
+    // name according to shorting
+    //
+    // Build multidimensional array
+    //     use prop selector for each card
+    //     add "Count" field
+    // select starting point
+    // insert set
+    // check length, define range of inserted set
+
+  })
+}
+
+async function getSelectedPropsHTML() {
   let stringed = '';
   for (let i in selectedFields) {
     stringed += optionText[i] + ':' + selectedFields[i] + ', <br/>';
@@ -118,7 +158,7 @@ async function getSelectedProps() {
 }
 
 export async function propsOn() {
-  return getSelectedProps()
+  return getSelectedPropsHTML()
   .then((printThis) => {
     document.getElementById('selectionpoint').innerHTML = printThis;
     return 0;
@@ -127,10 +167,6 @@ export async function propsOn() {
     logui(error);
     return 0;
   })
-}
-
-export async function buildSet() {
-
 }
 
 export async function testchange() {
