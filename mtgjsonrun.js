@@ -6,19 +6,14 @@ const TARGET = 'pioneer'; // 'all' || 'pioneer'
 
 const configs = {
   all: {
-    URL: 'http://mtgjson.com/json/AllSets.json',
+    URL: 'http://mtgjson.com/api/v5/AllPrintings.json',
     DATA_FILE: path.join(__dirname, 'src/data/allsets.json'),
     ETAG_FILE: path.join(__dirname, 'src/data/allsets.etag'),
   },
   pioneercards: {
-    URL: 'http://mtgjson.com/json/PioneerCards.json',
+    URL: 'http://mtgjson.com/api/v5/Pioneer.json',
     DATA_FILE: path.join(__dirname, 'src/data/pioneercards.json'),
     ETAG_FILE: path.join(__dirname, 'src/data/pioneercards.etag'),
-  },
-  pioneerprints: {
-    URL: 'http://mtgjson.com/json/PioneerPrintings.json',
-    DATA_FILE: path.join(__dirname, 'src/data/pioneerprints.json'),
-    ETAG_FILE: path.join(__dirname, 'src/data/pioneerprints.etag'),
   },
 };
 
@@ -99,7 +94,7 @@ function mtgjson(useConfig, callback) {
 }
 
 async function go() {
-  mtgjson(configs.pioneerprints).then(cards => {
+  mtgjson(configs.pioneer).then(cards => {
     console.log(!!cards);
     console.log('Done');
     // Cards is object, not JSON already

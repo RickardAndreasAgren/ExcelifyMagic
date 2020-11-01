@@ -13,7 +13,8 @@ import {
   buildSelector,
   setOptions,
   initKeepers,
-  getSetData
+  getSetData,
+  setupCard
 } from '../api/excelifyapi.js';
 
 var selectedFields = {};
@@ -23,6 +24,8 @@ var checkBoxes = [];
 var sets = [];
 
 var currentSet;
+
+var format = 'pioneer';
 
 var selectedFields = {
     cbname: false,
@@ -61,7 +64,7 @@ Office.onReady(info => {
     document.getElementById('sideload-msg').style.display = 'none';
     document.getElementById('app-body').style.display = 'flex';
     document.getElementById('buildset').onclick = renderSetCards;
-
+    document.getElementById('formatselector').onclick = selectFormat;
 
 
     sets = setOptions()
@@ -135,6 +138,11 @@ async function buildSet() {
   })
 }
 
+export async function selectFormat() {
+  let formatChoice = document.getElementById('formatselector');
+  // Pioneer or all
+}
+
 export async function renderSetCards() {
   return buildSet()
   .then((data) => {
@@ -158,16 +166,25 @@ export async function renderSetCards() {
     return getSetData(data.set)
     .then((setData) => {
       let cardsList = setData.cards;
+
+      const cardPromises = [];
       for (let i = 0; i < cardsList.length; i++) {
-        // CARDS ARE HERE
+        cardPromises.push(new Promise((resolve, reject) => {
+          resolve(setupCard(processedCard,data.props,data.set.name));
+        }));
       }
-    });
-    // Build multidimensional array
-    //     use prop selector for each card
-    //     add "Count" field
-    // select starting point
-    // insert set
+
+      return Promise.all(cardPromises);
+    })
+    .then((cardArray) => {
+
+      return null;
+    })
+    // Select starting point
     // check length, define range of inserted set
+    /******
+    }
+    */
 
   }).catch((error) => {
     if (error.code === 'ItemAlreadyExists') {

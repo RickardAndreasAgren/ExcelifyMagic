@@ -1,6 +1,8 @@
-import pioneer from '../data/pioneerprints.json';
+
+import pioneer from '../data/pioneercards.json';
 import Sortkeeper from './sortkeeper.js';
 import {logui} from '../util/printui.js';
+import optionFromAPI from './optionAPI.js';
 
 var primaryKeeper;
 var secondaryKeeper;
@@ -45,4 +47,27 @@ export async function sortOptionsUpdate(option, add) {
     }
   }
   return 0;
+}
+/*
+  Cbname: 'name',
+  cbcolor: 'colors',
+  cbcmc: 'convertedManaCost',
+  cbtype: 'type',
+  cbsubtype: 'subtypes',
+
+  argument: collector#
+  composites: stats, supertype
+
+  // Filter type as per MY standard
+  //  -- add legendary, add sibling type to artirfact & enchantment
+  // stats as Power & Toughness OR Loyalty
+  // rarity?
+  // insert set
+  //     add "Count" field
+  // Legendary == supertype
+*/
+export async function setupCard(cardinfo, useOptions, setname) {
+  let cardAsArray = [];
+
+  return cardAsArray;
 }
