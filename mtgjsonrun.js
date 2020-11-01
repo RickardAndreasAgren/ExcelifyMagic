@@ -1,17 +1,20 @@
+
 var req = require('request');
 var fs = require('fs').promises;
 var path = require('path');
 
-const TARGET = 'pioneer'; // 'all' || 'pioneer'
+var target = 'pioneer'; // 'all' || 'pioneer'
+
+var callArgs = process.argv.slice(2);
 
 const configs = {
   all: {
-    URL: 'http://mtgjson.com/api/v5/AllPrintings.json',
+    URL: 'https://mtgjson.com/api/v5/AllPrintings.json',
     DATA_FILE: path.join(__dirname, 'src/data/allsets.json'),
     ETAG_FILE: path.join(__dirname, 'src/data/allsets.etag'),
   },
-  pioneercards: {
-    URL: 'http://mtgjson.com/api/v5/Pioneer.json',
+  pioneer: {
+    URL: 'https://mtgjson.com/api/v5/Pioneer.json',
     DATA_FILE: path.join(__dirname, 'src/data/pioneercards.json'),
     ETAG_FILE: path.join(__dirname, 'src/data/pioneercards.etag'),
   },
@@ -48,11 +51,10 @@ function mtgjson(useConfig, callback) {
                 reject(data.err);
               }
               console.log('Readfile success');
-
               resolve(JSON.parse(data));
             })
             .catch(error => {
-              console.log('EEEK');
+              console.log('EEEK1');
               console.log(error);
             });
         }
@@ -72,13 +74,13 @@ function mtgjson(useConfig, callback) {
                 resolve(JSON.parse(res.body));
               })
               .catch(error => {
-                console.log('EEEK');
+                console.log('EEEK2');
                 console.log(error);
               });
           })
 
           .catch(error => {
-            console.log('EEEK');
+            console.log('EEEK3');
             console.log(error);
           });
       });
@@ -94,11 +96,17 @@ function mtgjson(useConfig, callback) {
 }
 
 async function go() {
-  mtgjson(configs.pioneer).then(cards => {
-    console.log(!!cards);
-    console.log('Done');
-    // Cards is object, not JSON already
-  });
+  if (callArgs[0] == '-1' || callArgs[0] == 'pioneer' || callArgs.length < 1) {
+    mtgjson(configs.pioneer).then(cards => {
+      console.log(!!cards);
+      console.log('Done');
+    });
+  } else if (callArgs[0] == '-2' || callArgs[0] == 'all') {
+    mtgjson(configs.all).then(cards => {
+      console.log(!!cards);
+      console.log('Done');
+    });
+  }
 }
 
 go();

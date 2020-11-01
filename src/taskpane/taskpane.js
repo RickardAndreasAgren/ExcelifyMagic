@@ -23,8 +23,6 @@ var checkBoxes = [];
 
 var sets = [];
 
-var currentSet;
-
 var format = 'pioneer';
 
 var selectedFields = {
@@ -67,7 +65,7 @@ Office.onReady(info => {
     document.getElementById('formatselector').onclick = selectFormat;
 
 
-    sets = setOptions()
+    sets = setOptions(format)
       .then(options => {
         for (let set = 0; set < options.length; set++) {
           let newOption = document.createElement('option');
@@ -140,7 +138,11 @@ async function buildSet() {
 
 export async function selectFormat() {
   let formatChoice = document.getElementById('formatselector');
-  // Pioneer or all
+  if (formatChoice.value == 'pioneer') {
+    format = 'pioneer';
+  } else if (formatChoice.value == 'all') {
+    format = 'all';
+  }
 }
 
 export async function renderSetCards() {
@@ -178,7 +180,7 @@ export async function renderSetCards() {
     })
     .then((cardArray) => {
 
-      return null;
+      resolve(true);
     })
     // Select starting point
     // check length, define range of inserted set
