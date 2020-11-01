@@ -1,9 +1,5 @@
 
-async function validateFieldprint(source, target) {
-
-};
-
-async function printfield(
+export async function printfield(
   twoDimArray, toWriteOn, column = 0, row = 0, context) {
   // Check if
   var toPrint = '';
@@ -54,5 +50,3 @@ async function printfield(
   // Print message
   return 0;
 }
-
-export default printcell;

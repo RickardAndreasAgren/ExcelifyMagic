@@ -59,26 +59,56 @@ export async function sortOptionsUpdate(option, add) {
   }
   return 0;
 }
-/*
-  Cbname: 'name',
-  cbcolor: 'colors',
-  cbcmc: 'convertedManaCost',
-  cbtype: 'type',
-  cbsubtype: 'subtypes',
 
-  argument: collector#
-  composites: stats, supertype
+function getColour(cardinfo) {
+  let colour = '';
+  for (let i = 0;i < cardinfo.colorIdentity.length;i++) {
+    colour += cardinfo.colorIdentity[i];
+  }
+  return colour;
+};
 
-  // Filter type as per MY standard
-  //  -- add legendary, add sibling type to artirfact & enchantment
-  // stats as Power & Toughness OR Loyalty
-  // rarity?
-  // insert set
-  //     add "Count" field
-  // Legendary == supertype
-*/
+function mainType(fulltype) {
+  let splitType = fulltype.split('-');
+  return splitType[0].slice(0,-1);
+}
+
+function getType(cardinfo) {
+  let name = '';
+  if (cardinfo.supertypes.includes('Legendary')) {
+    name = 'Legendary ' + mainType(cardinfo.type);
+  } else {
+    name = mainType(cardinfo.type);
+  }
+  return name;
+};
+
+function getStats(cardinfo) {
+  let stats = '';
+  if (cardinfo.types.includes('Planeswalker')) {
+    stats = cardinfo.loyalty;
+  } else if (cardinfo.types.includes('Creature')) {
+    stats = cardinfo.power + '/' + cardinfo.toughness;
+  }
+  return stats
+};
+
+const CARDOPTIONS = {
+  cbname: (cardinfo) => {return cardinfo.name},
+  cbnumber: (cardinfo) => {return cardinfo.number},
+  cbcolor: getColour,
+  cbcmc: (cardinfo) => {return cardinfo.convertedManaCost},
+  cbtype: getType,
+  cbsubtype: (cardinfo) => {return cardinfo.subtypes},
+  cbstats: getStats,
+};
+
 export async function setupCard(cardinfo, useOptions, setname) {
   let cardAsArray = [];
-
+  for (let opt = 0;opt < useOptions.length; opt++) {
+    cardAsArray.push(CARDOPTIONS[opt](cardinfo));
+  }
+  cardAsArray.push(setname);
+  cardAsArray.push('0');
   return cardAsArray;
 }

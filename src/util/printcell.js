@@ -1,4 +1,4 @@
-async function printcell(msg, toWriteOn, column = 0, row = 0, context) {
+export async function printcell(msg, toWriteOn, column = 0, row = 0, context) {
   // Check if:
   // worksheet get A1
   // range get first
@@ -51,5 +51,3 @@ async function printcell(msg, toWriteOn, column = 0, row = 0, context) {
   // Print message
   return 0;
 }
-
-export default printcell;

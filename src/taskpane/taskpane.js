@@ -4,9 +4,10 @@
  * See LICENSE in the project root for license information.
  */
 
-import {printcellTest, printcell} from '../util/printcell.js';
+import { printcellTest, printcell } from '../util/printcell.js';
+import printfield from '../util/printfield.js';
 import printerror from '../util/printui.js';
-import {logui} from '../util/printui.js';
+import { logui } from '../util/printui.js';
 import optionText from '../api/optionText.js';
 import {
   sortOptionsUpdate,
@@ -26,14 +27,14 @@ var sets = [];
 var format = 'pioneer';
 
 var selectedFields = {
-    cbname: false,
-    cbnumber: false,
-    cbcolor: false,
-    cbcmc: false,
-    cbtype: false,
-    cbsubtype: false,
-    cbstats: false,
-  };
+  cbname: false,
+  cbnumber: false,
+  cbcolor: false,
+  cbcmc: false,
+  cbtype: false,
+  cbsubtype: false,
+  cbstats: false,
+};
 
 var checkBoxes = [
   'cbname',
@@ -58,12 +59,10 @@ can be targeted by .js from this scope.
 
 Office.onReady(info => {
   if (info.host === Office.HostType.Excel) {
-
     document.getElementById('sideload-msg').style.display = 'none';
     document.getElementById('app-body').style.display = 'flex';
     document.getElementById('buildset').onclick = renderSetCards;
     document.getElementById('formatselector').onclick = selectFormat;
-
 
     sets = setOptions(format)
       .then(options => {
@@ -78,7 +77,7 @@ Office.onReady(info => {
         initKeepers();
         return options;
       })
-      .then((options) => {
+      .then(options => {
         for (var i = 0; i < checkBoxes.length; i++) {
           let target = Object.assign({}, { name: checkBoxes[i] });
           document.getElementById(target.name).onchange = function() {
@@ -89,8 +88,10 @@ Office.onReady(info => {
             try {
               sortOptionsUpdate(target.name, !!selectedFields[target.name]);
             } catch (error) {
-              document.getElementById('errorpoint').innerHTML = JSON.stringify(
-                {err: error.message, stack: error.stack})
+              document.getElementById('errorpoint').innerHTML = JSON.stringify({
+                err: error.message,
+                stack: error.stack,
+              });
             }
           };
         }
@@ -115,12 +116,11 @@ Office.onReady(info => {
 Define functions to be used by triggers
 ***************************/
 
-
 async function getSelectedProps() {
   let activeProps = [];
   for (let i in selectedFields) {
     if (selectedFields[i]) {
-      activeProps.push(optionText[i]);
+      activeProps.push(i);
     }
   }
   return activeProps;
@@ -130,10 +130,9 @@ async function buildSet() {
   let setlist = document.getElementById('setselector');
   var activeSet = setlist[setlist.selectedIndex].value;
 
-  return getSelectedProps()
-  .then((props) => {
-    return {set: activeSet, props: props};
-  })
+  return getSelectedProps().then(props => {
+    return { set: activeSet, props: props };
+  });
 }
 
 export async function selectFormat() {
@@ -147,54 +146,71 @@ export async function selectFormat() {
 
 export async function renderSetCards() {
   return buildSet()
-  .then((data) => {
+    .then(data => {
+      return Excel.run(function(context) {
+        var sheets = context.workbook.worksheets;
 
-    return Excel.run(function(context) {
-      var sheets = context.workbook.worksheets;
+        var sheet = sheets.add(data.set);
+        sheet.activate();
+        sheet.load('name, position');
+        sheet.position = 0;
+        return context.sync().then(function() {
+          logui(
+            `Added worksheet named "${sheet.name}" in position ${sheet.position}`
+          );
+          return data;
+        });
+      });
+    })
+    .then(data => {
+      return getSetData(data.set)
+        .then(setData => {
+          let cardsList = setData.cards;
 
-      var sheet = sheets.add(data.set);
-      sheet.activate();
-      sheet.load('name, position');
-      sheet.position = 0;
-      return context.sync()
-          .then(function() {
-              logui(`Added worksheet named "${sheet.name}" in position ${sheet.position}`);
-              return data;
+          const cardPromises = [];
+          for (let i = 0; i < cardsList.length; i++) {
+            cardPromises.push(
+              new Promise((resolve, reject) => {
+                resolve(setupCard(processedCard, data.props, data.set.name));
+              })
+            );
+          }
+
+          return Promise.all(cardPromises);
+        })
+        .then(cardArray => {
+          let headers = getSelectedProps();
+          try {
+            let run = Excel.run(async context => {
+              var range = context.workbook.getSelectedRange();
+              var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+              let selection = range ? range : currentWorksheet;
+              printfield(cardArray, selection, 1, 1, context);
             });
-    })
-  })
-  .then((data) => {
-
-    return getSetData(data.set)
-    .then((setData) => {
-      let cardsList = setData.cards;
-
-      const cardPromises = [];
-      for (let i = 0; i < cardsList.length; i++) {
-        cardPromises.push(new Promise((resolve, reject) => {
-          resolve(setupCard(processedCard,data.props,data.set.name));
-        }));
-      }
-
-      return Promise.all(cardPromises);
-    })
-    .then((cardArray) => {
-
-      resolve(true);
-    })
-    // Select starting point
-    // check length, define range of inserted set
-    /******
+            resolve(run);
+          } catch (error) {
+            let err = Excel.run(async context => {
+              var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+              printcell(error.message, currentWorksheet);
+              return context.sync();
+            });
+            console.error(error);
+            reject(err);
+          }
+        });
+      // Select starting point
+      // check length, define range of inserted set
+      /******
     }
     */
-
-  }).catch((error) => {
-    if (error.code === 'ItemAlreadyExists') {
-      printerror('Worksheet name is occupied.');
-    } else {
-      printerror(error);
-    }
-  })
+    })
+    .catch(error => {
+      if (error.code === 'ItemAlreadyExists') {
+        printerror('Worksheet name is occupied.');
+      } else {
+        printerror(error);
+      }
+    });
 }
 
 async function getSelectedPropsHTML() {
@@ -207,14 +223,14 @@ async function getSelectedPropsHTML() {
 
 export async function propsOn() {
   return getSelectedPropsHTML()
-  .then((printThis) => {
-    document.getElementById('selectionpoint').innerHTML = printThis;
-    return 0;
-  })
-  .catch(error => {
-    logui(error);
-    return 0;
-  })
+    .then(printThis => {
+      document.getElementById('selectionpoint').innerHTML = printThis;
+      return 0;
+    })
+    .catch(error => {
+      logui(error);
+      return 0;
+    });
 }
 
 export async function testchange() {
@@ -224,7 +240,6 @@ export async function testchange() {
 
       var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
 
-      buildSelector();
       await printcell('Fucks sake', currentWorksheet);
       await printcell('Fucks sake too', currentWorksheet, 3, 3);
       await printcell('derp', range, 2, 2, context);
