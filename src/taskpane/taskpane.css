@@ -16,6 +16,11 @@ ul {
    padding: 0;
 }
 
+.logpoint p {
+  max-width: 400px;
+  word-wrap: break-word;
+}
+
 .ms-ListItem span {
   width: 100%;
 }

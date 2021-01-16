@@ -2,3 +2,4 @@ node_modules/
 todo.txt
 
 src/data/
+dist/

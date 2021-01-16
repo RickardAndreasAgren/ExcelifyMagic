@@ -15,13 +15,10 @@ export async function initKeepers() {
   secondaryKeeper.setOverride(primaryKeeper.overrideOption);
 }
 
-export async function getSetData(set) {
-  logui(typeof format);
+export function getSetData(set, format) {
   if (format == 'pioneer') {
-    logui(Array.isArray(pioneer));
     return pioneer.data[set];
   } else if (format == 'all') {
-    logui(Array.isArray(allcards));
     return allcards.data[set];
   }
 }
@@ -63,8 +60,11 @@ export async function sortOptionsUpdate(option, add) {
 function getColour(cardinfo) {
   let regex = /[A-Z]|[a-z]/;
   let colour = '';
+  if (!cardinfo.manaCost) {
+    return 'C';
+  }
   let cArray = cardinfo.manaCost.match(regex);
-  if (cArray.length > 0) {
+  if (cArray && cArray.length > 0) {
     cArray.forEach(element => colour += element);
   } else {
     colour = 'C';
@@ -108,12 +108,14 @@ const CARDOPTIONS = {
   cbstats: getStats,
 };
 
-export async function setupCard(cardinfo, useOptions, setname) {
-  let cardAsArray = [];
-  for (let opt = 0;opt < useOptions.length; opt++) {
-    cardAsArray.push(CARDOPTIONS[opt](cardinfo));
-  }
-  cardAsArray.push(setname);
-  cardAsArray.push('0');
-  return cardAsArray;
+export function setupCard(cardinfo, useOptions, setname) {
+  return new Promise((resolve, reject) => {
+    let cardAsArray = [];
+    for (let opt = 0;opt < useOptions.length; opt++) {
+      cardAsArray.push(CARDOPTIONS[useOptions[opt]](cardinfo));
+    }
+    cardAsArray.push(setname);
+    cardAsArray.push('0');
+    resolve(cardAsArray);
+  });
 }

@@ -163,78 +163,92 @@ export async function renderSetCards() {
       });
     })
     .then(data => {
-      return getSetData(data.set)
-        .then(setData => {
-          let cardsList = setData.cards;
-
-          const cardPromises = [];
-          for (let i = 0; i < cardsList.length; i++) {
-            cardPromises.push(
-              new Promise((resolve, reject) => {
-                resolve(setupCard(cardsList[i], data.props, data.set.name));
-              })
-            );
-          }
-
-          return Promise.all(cardPromises);
-        })
-        .then(cardArray => {
-          let pSort = false;
-          let sSort = false;
-          if (document.getElementById('psortactive').checked) {
-            pSort = document.getElementById('primarysort').value;
-          }
-          if (document.getElementById('ssortactive').checked) {
-            sSort = document.getElementById('secondarysort').value;
-          }
-          return new Promise((resolve, reject) => {
-            resolve(
-              cardArray.sort((a, b) => {
-                if (pSort) {
-                  if (a[pSort] < b[pSort]) {
-                    return -1;
-                  }
-                  if (a[pSort] > b[pSort]) {
-                    return 1;
-                  }
-                }
-                if (sSort) {
-                  if (a[sSort] < b[sSort]) {
-                    return -1;
-                  }
-                  if (a[sSort] > b[sSort]) {
-                    return 1;
-                  }
-                }
-                return 0;
-              })
-            );
-          });
-        })
-        .then(cardArray => {
-          cardArray.splice(0, 0, getSelectedProps());
-          cardArray[0].push('Expansion');
-          cardArray[0].push('Count');
-          try {
-            let run = Excel.run(async context => {
-              var range = context.workbook.getSelectedRange();
-              var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
-              let selection = range ? range : currentWorksheet;
-              let result = printfield(cardArray, selection, 0, 0, context);
-              printui(result);
-              return 0;
-            });
-            resolve(run);
-          } catch (error) {
-            let err = Excel.run(async context => {
-              var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
-              printcell(error.message, currentWorksheet);
-              return context.sync();
-            });
-            console.error(error);
-            reject(err);
-          }
+      return { set: getSetData(data.set, format), props: data.props };
+    })
+    .then(setData => {
+      var cardsList = setData.set.cards;
+      var setupArray = [];
+      logui(cardsList.length);
+      cardsList.forEach(card => {
+        setupArray.push(setupCard(card, setData.props, setData.set.name));
+      });
+      return Promise.all(setupArray).then(results => {return results})
+      .catch(error => {
+        logui('<<<<<<< rejection hit >>>>>>');
+        logui(error.message);
+      })
+    })
+    .then(cardArray => {
+      logui('---------------------setup complete');
+      let props = getSelectedProps();
+      let pSort = false;
+      let sSort = false;
+      logui('Sorting next');
+      // Translate sorting to array index
+      if (document.getElementById('psortactive').checked) {
+        let pVal = document.getElementById('primarysort').value;
+        pSort = props.indexOf(pVal);
+        logui(pSort);
+      }
+      if (document.getElementById('ssortactive').checked) {
+        let sVal = document.getElementById('secondarysort').value;
+        sSort = props.indexOf(sVal);
+        logui(sSort);
+      }
+      return new Promise((resolve, reject) => {
+        resolve(
+          cardArray.sort((a, b) => {
+            logui(a);
+            if (pSort) {
+              if (a[pSort] < b[pSort]) {
+                return -1;
+              }
+              if (a[pSort] > b[pSort]) {
+                return 1;
+              }
+            }
+            if (sSort) {
+              if (a[sSort] < b[sSort]) {
+                return -1;
+              }
+              if (a[sSort] > b[sSort]) {
+                return 1;
+              }
+            }
+            return 0;
+          })
+        );
+      });
+    })
+    .then(cardArray => {
+      try {
+        cardArray.splice(0, 0, getSelectedProps());
+      } catch (error) {
+        printerror(error);
+      }
+      cardArray[0].push('Expansion');
+      cardArray[0].push('Count');
+      logui(cardArray[0]);
+      logui(cardArray[1]);
+      try {
+        let run = Excel.run(async context => {
+          var range = context.workbook.getSelectedRange();
+          var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+          let selection = range ? range : currentWorksheet;
+          let result = printfield(cardArray, selection, 0, 0, context);
+          logui(result);
+          return 0;
         });
+        resolve(run);
+      } catch (error) {
+        let err = Excel.run(async context => {
+          var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+          printcell(error.message, currentWorksheet);
+          return context.sync();
+        });
+        console.error(error);
+        reject(err);
+      }
     })
     .catch(error => {
       if (error.code === 'ItemAlreadyExists') {
