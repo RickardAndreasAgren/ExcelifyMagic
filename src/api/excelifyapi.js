@@ -61,10 +61,15 @@ export async function sortOptionsUpdate(option, add) {
 }
 
 function getColour(cardinfo) {
+  let regex = /[A-Z]|[a-z]/;
   let colour = '';
-  for (let i = 0;i < cardinfo.colorIdentity.length;i++) {
-    colour += cardinfo.colorIdentity[i];
+  let cArray = cardinfo.manaCost.match(regex);
+  if (cArray.length > 0) {
+    cArray.forEach(element => colour += element);
+  } else {
+    colour = 'C';
   }
+
   return colour;
 };
 

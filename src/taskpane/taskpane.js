@@ -171,7 +171,7 @@ export async function renderSetCards() {
           for (let i = 0; i < cardsList.length; i++) {
             cardPromises.push(
               new Promise((resolve, reject) => {
-                resolve(setupCard(processedCard, data.props, data.set.name));
+                resolve(setupCard(cardsList[i], data.props, data.set.name));
               })
             );
           }
@@ -179,7 +179,39 @@ export async function renderSetCards() {
           return Promise.all(cardPromises);
         })
         .then(cardArray => {
-          let headers = getSelectedProps();
+          let pSort = false;
+          let sSort = false;
+          if (document.getElementById('psortactive').checked) {
+            pSort = document.getElementById('primarysort').value;
+          }
+          if (document.getElementById('ssortactive').checked) {
+            sSort = document.getElementById('secondarysort').value;
+          }
+          return new Promise((resolve, reject) => {
+            resolve(cardArray.sort((a,b) => {
+              if (pSort) {
+                if (a[pSort] < b[pSort]) {
+                  return -1;
+                }
+                if (a[pSort] > b[pSort]) {
+                  return 1;
+                }
+              }
+              if (sSort) {
+                if (a[sSort] < b[sSort]) {
+                  return -1;
+                }
+                if (a[sSort] > b[sSort]) {
+                  return 1;
+                }
+              }
+              return 0;
+            }));
+          })
+        })
+        .then(cardArray => {
+          cardArray.splice(0,0, getSelectedProps());
+          cardArray[0].push('Count');
           try {
             let run = Excel.run(async context => {
               var range = context.workbook.getSelectedRange();
