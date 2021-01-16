@@ -1,4 +1,6 @@
 
+import { numberToLetters, lettersToNumber } from '../util/printui.js';
+
 export async function printfield(
   twoDimArray, toWriteOn, column = 0, row = 0, context) {
   // Check if
@@ -9,44 +11,33 @@ export async function printfield(
     toPrint = msg;
   }
 
+  let arrayX = twoDimArray[0].length;
+  let arrayY = twoDimArray.length;
+
   if (toWriteOn instanceof Excel.Range) {
+    let rangeX = toWriteOn.columnCount;
+    let rangeY = toWriteOn.rowCount;
     toWriteOn.load(['values', 'columnIndex', 'rowIndex']);
     await context.sync();
-    var targetCol = toWriteOn.columnIndex;
-    var targetRow = toWriteOn.rowIndex;
-
-    var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
-    var a1cell = currentWorksheet.getCell(0, 1);
-    a1cell.values = [['Range: Trying... ' + targetCol + ' ' + targetRow]];
-
-    var selectRange = currentWorksheet.getCell(targetRow, targetCol);
-    /*
-    Var rangeRow =
-      (row + 1) > toWriteOn.rowCount
-        ? toWriteOn.rowIndex
-        : toWriteOn.rowIndex + row;
-    var rangeColumn =
-      (column + 1) > toWriteOn.columnCount
-        ? toWriteOn.columnIndex
-        : toWriteOn.columnIndex + column; */
-
-    selectRange.values = [['Range: ' + toPrint]];
+    if (!(rangeX < arrayX) && !(rangeY < arrayY)) {
+      twoWriteOn.values = twoDimArray;
+      return context.sync();
+    } else {
+      throw new Error('Range too small');
+    }
     // =======================================================
   } else if (toWriteOn instanceof Excel.Worksheet) {
-    var a1cell = toWriteOn.getCell(column, row);
+    let xTarget = arrayY;
+    let yTarget = numberToLetters(arrayX);
 
-    a1cell.values = [['Worksheet: ' + toPrint]];
+    var _range = toWriteOn.getRange('A1:' + xTarget + yTarget);
+    _range.values = twoDimArray;
+
     // =======================================================
   } else {
     await Excel.run(async context => {
-      var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
-
-      var a1cell = currentWorksheet.getCell(column, row);
-
-      a1cell.values = [['Else: ' + toPrint]];
+      return 'Could not write to range or worksheet';
     });
   }
-
-  // Print message
   return 0;
 }

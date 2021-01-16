@@ -188,36 +188,41 @@ export async function renderSetCards() {
             sSort = document.getElementById('secondarysort').value;
           }
           return new Promise((resolve, reject) => {
-            resolve(cardArray.sort((a,b) => {
-              if (pSort) {
-                if (a[pSort] < b[pSort]) {
-                  return -1;
+            resolve(
+              cardArray.sort((a, b) => {
+                if (pSort) {
+                  if (a[pSort] < b[pSort]) {
+                    return -1;
+                  }
+                  if (a[pSort] > b[pSort]) {
+                    return 1;
+                  }
                 }
-                if (a[pSort] > b[pSort]) {
-                  return 1;
+                if (sSort) {
+                  if (a[sSort] < b[sSort]) {
+                    return -1;
+                  }
+                  if (a[sSort] > b[sSort]) {
+                    return 1;
+                  }
                 }
-              }
-              if (sSort) {
-                if (a[sSort] < b[sSort]) {
-                  return -1;
-                }
-                if (a[sSort] > b[sSort]) {
-                  return 1;
-                }
-              }
-              return 0;
-            }));
-          })
+                return 0;
+              })
+            );
+          });
         })
         .then(cardArray => {
-          cardArray.splice(0,0, getSelectedProps());
+          cardArray.splice(0, 0, getSelectedProps());
+          cardArray[0].push('Expansion');
           cardArray[0].push('Count');
           try {
             let run = Excel.run(async context => {
               var range = context.workbook.getSelectedRange();
               var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
               let selection = range ? range : currentWorksheet;
-              printfield(cardArray, selection, 1, 1, context);
+              let result = printfield(cardArray, selection, 0, 0, context);
+              printui(result);
+              return 0;
             });
             resolve(run);
           } catch (error) {
@@ -230,11 +235,6 @@ export async function renderSetCards() {
             reject(err);
           }
         });
-      // Select starting point
-      // check length, define range of inserted set
-      /******
-    }
-    */
     })
     .catch(error => {
       if (error.code === 'ItemAlreadyExists') {
