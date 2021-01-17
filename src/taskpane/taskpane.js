@@ -71,6 +71,11 @@ Office.onReady(info => {
           newOption.value = options[set].type;
           newOption.text = options[set].name;
           document.getElementById('setselector').add(newOption, null);
+          document.getElementById('setselector').onchange = function() {
+            let setlist = document.getElementById('setselector');
+            let activeSet = setlist[setlist.selectedIndex].value;
+            document.getElementById('printrows').innerHTML = activeSet.length;
+          }
         }
         document.getElementById('toberemoved').remove();
         document.getElementById('selectionpoint').innerHTML = '';
@@ -81,10 +86,9 @@ Office.onReady(info => {
         for (var i = 0; i < checkBoxes.length; i++) {
           let target = Object.assign({}, { name: checkBoxes[i] });
           document.getElementById(target.name).onchange = function() {
-            /* Document.getElementById('errorpoint').innerHTML = JSON.stringify(
-              target.name
-            );*/
             selectedFields[target.name] = !selectedFields[target.name];
+            // Identify selected count
+            document.getElementById('printcolumns').innerHTML = '';
             try {
               sortOptionsUpdate(target.name, !!selectedFields[target.name]);
             } catch (error) {
@@ -98,14 +102,6 @@ Office.onReady(info => {
         return options;
       })
       .catch(error => {
-        /*
-        If (error.message === 'string') {
-          document.getElementById('errorpoint').innerHTML = error.message;
-        } else {
-          document.getElementById('errorpoint').innerHTML = JSON.stringify(
-            error.message
-          );
-        }*/
         document.getElementById('errorpoint').innerHTML =
           'Shit happened: ' + error.message + ' Stack: ' + error.stack;
       });
@@ -290,37 +286,4 @@ export async function propsOn() {
       logui(error);
       return 0;
     });
-}
-
-export async function testchange() {
-  try {
-    await Excel.run(async context => {
-      var range = context.workbook.getSelectedRange();
-
-      var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
-
-      await printcell('Fucks sake', currentWorksheet);
-      await printcell('Fucks sake too', currentWorksheet, 3, 3);
-      await printcell('derp', range, 2, 2, context);
-
-      range.format.borders.getItem('EdgeBottom').style = 'Continuous';
-      range.format.borders.getItem('EdgeLeft').style = 'Continuous';
-      range.format.borders.getItem('EdgeRight').style = 'Continuous';
-      range.format.borders.getItem('EdgeTop').style = 'Continuous';
-
-      range.format.borders.getItem('EdgeBottom').color = 'Blue';
-      range.format.borders.getItem('EdgeLeft').color = 'Blue';
-      range.format.borders.getItem('EdgeRight').color = 'Blue';
-      range.format.borders.getItem('EdgeTop').color = 'Blue';
-
-      return context.sync();
-    });
-  } catch (error) {
-    await Excel.run(async context => {
-      var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
-      printcell(error.message, currentWorksheet);
-      return context.sync();
-    });
-    console.error(error);
-  }
 }
