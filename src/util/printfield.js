@@ -22,12 +22,26 @@ export async function printfield(
     let rangeX = range.columnCount;
     let rangeY = range.rowCount;
 
+    function saveRange() {
+      let setlist = document.getElementById('setselector');
+      let activeSet = setlist[setlist.selectedIndex].value;
+      let rangeBusy = currentWorksheet.names.getItem(activeSet);
+      if (rangeBusy) {
+        rangeBusy.delete();
+        context.sync();
+      }
+      currentWorksheet.names.add(activeSet, range);
+      const namedItems = currentWorksheet.names.load('name, type');
+
+    }
+
     logui('Selecting canvas\n');
     if (!(rangeX < arrayX) && !(rangeY < arrayY)) {
       logui('Populating range\n');
 
-      twoWriteOn.values = twoDimArray;
-      return context.sync();
+      range.values = twoDimArray;
+      saveRange();
+      return context.sync().then(() => {return range});
       // =======================================================
     } else {
       logui('Populating sheet\n');
@@ -35,12 +49,13 @@ export async function printfield(
       let xTarget = await numberToLetters(arrayX - 1);
       let rangeString = 'A1:' + xTarget + yTarget;
       logui(rangeString);
-      var _range = currentWorksheet.getRange(rangeString);
-      _range.load(['values', 'columnIndex', 'rowIndex','columnCount','rowCount']);
+      var range = currentWorksheet.getRange(rangeString);
+      range.load(['values', 'columnIndex', 'rowIndex','columnCount','rowCount']);
       logui('Loaded range properties');
       await context.sync()
-      _range.values = twoDimArray;
-      return context.sync();
+      range.values = twoDimArray;
+      saveRange();
+      return context.sync().then(() => {return range});
 
       // =======================================================
     }

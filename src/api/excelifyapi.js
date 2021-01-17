@@ -5,6 +5,8 @@ import Sortkeeper from './sortkeeper.js';
 import { logui } from '../util/printui.js';
 import optionFromAPI from './optionAPI.js';
 
+const preType = ['Legendary','Artifact'];
+
 var primaryKeeper;
 var secondaryKeeper;
 
@@ -73,19 +75,21 @@ function getColour(cardinfo) {
   return colour;
 };
 
-function mainType(fulltype) {
-  let splitType = fulltype.split('-');
-  return splitType[0].slice(0,-1);
-}
-
 function getType(cardinfo) {
-  let name = '';
-  if (cardinfo.supertypes.includes('Legendary')) {
-    name = 'Legendary ' + mainType(cardinfo.type);
+  let fulltype = cardinfo.type;
+  let splitType = fulltype.split(' ');
+  if (splitType.length > 1) {
+    if (preType.includes(splitType[0])) {
+      if (splitType[1] == '—') {
+        splitType.splice(1,0);
+      }
+      return splitType[0] + ' ' + splitType[1];
+    } else {
+      return splitType[0];
+    }
   } else {
-    name = mainType(cardinfo.type);
+    return fulltype;
   }
-  return name;
 };
 
 function getStats(cardinfo) {

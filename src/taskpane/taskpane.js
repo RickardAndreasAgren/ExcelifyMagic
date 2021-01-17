@@ -259,7 +259,7 @@ export async function renderSetCards() {
           headers.push('Count');
           cardArray.splice(0, 0, headers);
 
-          let run = Excel.run(async context => {
+          return Excel.run(async context => {
             logui('Printfield call');
             return await printfield(cardArray, 0, 0, context);
           })
