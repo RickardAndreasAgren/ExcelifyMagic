@@ -5,7 +5,7 @@
  */
 
 import { printcellTest, printcell } from '../util/printcell.js';
-import {printfield} from '../util/printfield.js';
+import { printfield } from '../util/printfield.js';
 import printerror from '../util/printui.js';
 import { logui } from '../util/printui.js';
 import optionText from '../api/optionText.js';
@@ -73,14 +73,14 @@ Office.onReady(info => {
           document.getElementById('setselector').add(newOption, null);
           document.getElementById('setselector').onchange = function() {
             setRows();
-          }
+          };
         }
         document.getElementById('toberemoved').remove();
         document.getElementById('selectionpoint').innerHTML = '';
         setRows();
         document.getElementById('newsheet').onchange = function() {
           newSheet = document.getElementById('newsheet').checked;
-        }
+        };
         initKeepers();
         return options;
       })
@@ -92,7 +92,9 @@ Office.onReady(info => {
             let selections = 2;
             Object.keys(selectedFields).forEach(field => {
               if (selectedFields[field]) {
-                selections += 1;}});
+                selections += 1;
+              }
+            });
             document.getElementById('printcolumns').innerHTML = selections;
 
             try {
@@ -181,7 +183,7 @@ export async function renderSetCards() {
           logui(field);
           selectedFieldsCount += 1;
         }
-      })
+      });
       if (selectedFieldsCount < 1) {
         throw new Error('No options selected');
       }
@@ -199,33 +201,37 @@ export async function renderSetCards() {
         });
     })
     .then(cardArray => {
-      logui('---------------------setup complete');
       let pSort = false;
       let sSort = false;
-      getSelectedProps().then(props => {
-        logui('Sorting next. Options are:');
-        logui(props);
-        logui('Primary sort is: ');
-        logui(document.getElementById('psortactive').checked);
-        if (document.getElementById('psortactive').checked) {
-          let pVal = document.getElementById('primarysort').value;
-          logui(pVal);
-          pSort = props.indexOf(pVal);
-          logui(pSort);
-        }
-
-        logui('Secondary sort is: ');
-        logui(document.getElementById('ssortactive').checked);
-        if (document.getElementById('ssortactive').checked) {
-          let sVal = document.getElementById('secondarysort').value;
-          logui(sVal);
-          sSort = props.indexOf(sVal);
-          logui(sSort);
-        }
-      });
       return new Promise((resolve, reject) => {
-        resolve(
-          cardArray.sort((a, b) => {
+        logui('---------------------setup complete');
+        resolve(getSelectedProps());
+      })
+        .then(props => {
+          logui('Sorting next. Options are:');
+          logui(props);
+          logui('Primary sort is: ');
+          logui(document.getElementById('psortactive').checked);
+          if (document.getElementById('psortactive').checked) {
+            let pVal = document.getElementById('primarysort').value;
+            logui(pVal);
+            pSort = props.indexOf(pVal);
+            logui(pSort);
+          }
+
+          logui('Secondary sort is: ');
+          logui(document.getElementById('ssortactive').checked);
+          if (document.getElementById('ssortactive').checked) {
+            let sVal = document.getElementById('secondarysort').value;
+            logui(sVal);
+            sSort = props.indexOf(sVal);
+            logui(sSort);
+          }
+        })
+        .then(() => {
+          return cardArray.sort((a, b) => {
+            //Logui(a[pSort]);
+            //logui(b[pSort]);
             if (pSort) {
               if (a[pSort] < b[pSort]) {
                 return -1;
@@ -243,9 +249,8 @@ export async function renderSetCards() {
               }
             }
             return 0;
-          })
-        );
-      });
+          });
+        });
     })
     .then(cardArray => {
       logui('Sorting complete');
