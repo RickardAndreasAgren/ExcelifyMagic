@@ -15,6 +15,7 @@ import {
   setOptions,
   initKeepers,
   getSetData,
+  getSetName,
   setupCard
 } from '../api/excelifyapi.js';
 
@@ -65,7 +66,19 @@ Office.onReady(info => {
     document.getElementById('formatselector').onclick = selectFormat;
 
     sets = setOptions(format)
-      .then(options => {
+      .then(setList => {
+        let options = setList.sort((a,b) => {
+          let aDate = new Date(a.releaseDate);
+          let bDate = new Date(b.releaseDate);
+          if (aDate > bDate) {
+            return 1;
+          }
+          if (aDate < bDate) {
+            return -1;
+          }
+          return 0;
+        });
+
         for (let set = 0; set < options.length; set++) {
           let newOption = document.createElement('option');
           newOption.value = options[set].type;
@@ -132,10 +145,10 @@ async function getSelectedProps() {
 
 async function buildSet() {
   let setlist = document.getElementById('setselector');
-  var activeSet = setlist[setlist.selectedIndex].value;
-
+  let activeSet = setlist[setlist.selectedIndex].value;
+  let name = getSetName(activeSet, format);
   return getSelectedProps().then(props => {
-    return { set: activeSet, props: props };
+    return { set: activeSet, name: name, props: props };
   });
 }
 
@@ -160,8 +173,7 @@ export async function renderSetCards() {
       return Excel.run(function(context) {
         if (newSheet) {
           var sheets = context.workbook.worksheets;
-
-          var sheet = sheets.add(data.set);
+          var sheet = sheets.add(data.name);
           sheet.activate();
           sheet.load('name, position');
           sheet.position = 0;
@@ -230,8 +242,6 @@ export async function renderSetCards() {
         })
         .then(() => {
           return cardArray.sort((a, b) => {
-            //Logui(a[pSort]);
-            //logui(b[pSort]);
             if (pSort) {
               if (a[pSort] < b[pSort]) {
                 return -1;

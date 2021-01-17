@@ -10,6 +10,7 @@ export async function printfield(twoDimArray, column = 0, row = 0) {
       logui(twoDimArray[0]);
       let arrayY = twoDimArray.length;
 
+      var currentWorkbook = context.workbook;
       var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
 
       var range = context.workbook.getSelectedRange();
@@ -27,17 +28,16 @@ export async function printfield(twoDimArray, column = 0, row = 0) {
       async function saveRange() {
         let setlist = document.getElementById('setselector');
         let activeSet = setlist[setlist.selectedIndex].value;
-        let rangeBusy = currentWorksheet.names.getItemOrNullObject(activeSet);
-        rangeBusy.load();
+        let rangeBusy = currentWorkbook.names.getItemOrNullObject(activeSet);
         await context.sync();
         if (rangeBusy) {
           rangeBusy.delete();
           logui('Replacing existing named range');
           await context.sync();
         }
-        currentWorksheet.names.add(activeSet, range);
+        currentWorkbook.names.add(activeSet, range);
         logui('Added named range: ' + activeSet);
-        const namedItems = currentWorksheet.names.load('name, type');
+        const namedItems = currentWorkbook.names.load('name, type');
         return await context.sync()
       }
 

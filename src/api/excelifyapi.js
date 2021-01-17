@@ -25,6 +25,14 @@ export function getSetData(set, format) {
   }
 }
 
+export function getSetName(set, format) {
+  if (format == 'pioneer') {
+    return pioneer.data[set].name;
+  } else if (format == 'all') {
+    return allcards.data[set].name;
+  }
+}
+
 export async function setOptions(format) {
   var pObject = {};
   if (format == 'pioneer') {
@@ -35,7 +43,8 @@ export async function setOptions(format) {
   let setsList = [];
   for (let set in pObject) {
     // Logui(set);
-    setsList.push({ type: pObject[set].code, name: pObject[set].name });
+    setsList.push({ releaseDate: pObject[set].releaseDate,
+      type: pObject[set].code, name: pObject[set].name, });
   }
   setsList.sort();
   return setsList;
