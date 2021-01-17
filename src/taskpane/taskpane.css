@@ -17,8 +17,34 @@ ul {
 }
 
 .logpoint p {
-  max-width: 400px;
+  max-width: 500px;
   word-wrap: break-word;
+}
+
+.sizeindicator {
+  width: 50%;
+}
+
+.requirements {
+  display: flex;
+  flex-wrap: wrap;
+  min-width: 100%;
+}
+
+.requirements .col-4 {
+  min-width: 33.33%;
+}
+
+.requirements .col-6 {
+  min-width: 50%;
+}
+
+.requirements .col-8 {
+  min-width: 66.67%;
+}
+
+.requirements .col-12 {
+  min-width: 100%;
 }
 
 .ms-ListItem span {

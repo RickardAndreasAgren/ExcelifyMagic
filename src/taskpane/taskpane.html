@@ -126,27 +126,31 @@
           <option id="toberemoved" value="dummy">Test display</option>
         </select>
       </div>
-      <div>
-        <span>
-          <p>Rows: </p>
-        </span>
-        <span>
-          <p id="printrows"></p>
-        </span>
-      </div>
-      <div>
-        <span>
-          <p>Columns: </p>
-        </span>
-        <span>
-          <p id="printcolumns"></p>
-        </span>
-      </div>
+      <div class="sizeindicator">
+        <div class="requirements">
+          <div class="col-12">
+            <div class="requirements">
+              <p class="col-6">Rows:  </p>
+              <p class="col-6" id="printrows"></p>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="requirements">
+              <p class="col-6" >Columns:  </p>
+              <p class="col-6" id="printcolumns"></p>
+            </div>
+          </div>
+        </div>
+        </div>
       <div
         role="button"
         id="buildset"
         class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl"
       >
+        <span class="ms-font-m"
+          >New Sheet
+          <input type="checkbox" id="newsheet" name="newsheet" value="newsheet" />
+        </span>
         <span class="ms-Button-label">Build Set</span>
       </div>
       <div>

@@ -18,13 +18,13 @@ import {
   setupCard
 } from '../api/excelifyapi.js';
 
-var selectedFields = {};
-
 var checkBoxes = [];
 
 var sets = [];
 
 var format = 'pioneer';
+
+var newSheet = false;
 
 var selectedFields = {
   cbname: false,
@@ -72,13 +72,15 @@ Office.onReady(info => {
           newOption.text = options[set].name;
           document.getElementById('setselector').add(newOption, null);
           document.getElementById('setselector').onchange = function() {
-            let setlist = document.getElementById('setselector');
-            let activeSet = setlist[setlist.selectedIndex].value;
-            document.getElementById('printrows').innerHTML = activeSet.length;
+            setRows();
           }
         }
         document.getElementById('toberemoved').remove();
         document.getElementById('selectionpoint').innerHTML = '';
+        setRows();
+        document.getElementById('newsheet').onchange = function() {
+          newSheet = document.getElementById('newsheet').checked;
+        }
         initKeepers();
         return options;
       })
@@ -87,8 +89,12 @@ Office.onReady(info => {
           let target = Object.assign({}, { name: checkBoxes[i] });
           document.getElementById(target.name).onchange = function() {
             selectedFields[target.name] = !selectedFields[target.name];
-            // Identify selected count
-            document.getElementById('printcolumns').innerHTML = '';
+            let selections = 2;
+            Object.keys(selectedFields).forEach(field => {
+              if (selectedFields[field]) {
+                selections += 1;}});
+            document.getElementById('printcolumns').innerHTML = selections;
+
             try {
               sortOptionsUpdate(target.name, !!selectedFields[target.name]);
             } catch (error) {
@@ -140,20 +146,25 @@ export async function selectFormat() {
   }
 }
 
+function setRows() {
+  let selectedSet = document.getElementById('setselector').value;
+  let setData = getSetData(selectedSet, format);
+  document.getElementById('printrows').innerHTML = setData.cards.length;
+}
+
 export async function renderSetCards() {
   return buildSet()
     .then(data => {
       return Excel.run(function(context) {
-        var sheets = context.workbook.worksheets;
+        if (newSheet) {
+          var sheets = context.workbook.worksheets;
 
-        var sheet = sheets.add(data.set);
-        sheet.activate();
-        sheet.load('name, position');
-        sheet.position = 0;
+          var sheet = sheets.add(data.set);
+          sheet.activate();
+          sheet.load('name, position');
+          sheet.position = 0;
+        }
         return context.sync().then(function() {
-          logui(
-            `Added worksheet named "${sheet.name}" in position ${sheet.position}`
-          );
           return data;
         });
       });
@@ -164,7 +175,16 @@ export async function renderSetCards() {
     .then(setData => {
       var cardsList = setData.set.cards;
       var setupArray = [];
-      logui(cardsList.length);
+      let selectedFieldsCount = 0;
+      Object.keys(selectedFields).forEach(field => {
+        if (selectedFields[field] == true) {
+          logui(field);
+          selectedFieldsCount += 1;
+        }
+      })
+      if (selectedFieldsCount < 1) {
+        throw new Error('No options selected');
+      }
       cardsList.forEach(card => {
         setupArray.push(setupCard(card, setData.props, setData.set.name));
       });
@@ -175,6 +195,7 @@ export async function renderSetCards() {
         .catch(error => {
           logui('<<<<<<< rejection hit >>>>>>');
           logui(error.message);
+          throw error;
         });
     })
     .then(cardArray => {
@@ -263,7 +284,7 @@ export async function renderSetCards() {
       if (error.code === 'ItemAlreadyExists') {
         printerror('Worksheet name is occupied.');
       } else {
-        printerror(error);
+        printerror(error.message);
       }
     });
 }

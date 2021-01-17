@@ -21,7 +21,7 @@ export async function logui(msg) {
     toPrint = msg;
   }
 
-  toPrint = existing + ' \n ' + toPrint;
+  toPrint = existing + ' \n <p>' + toPrint + '</p>';
 
   document.getElementById('logpoint').innerHTML = toPrint;
   return 0;
