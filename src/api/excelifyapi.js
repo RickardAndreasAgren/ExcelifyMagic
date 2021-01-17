@@ -25,12 +25,19 @@ export function getSetData(set, format) {
   }
 }
 
+function scrubName(text) {
+  return text.replace(/[^\w\s]/gi, '')
+}
+
 export function getSetName(set, format) {
+  let name = '';
   if (format == 'pioneer') {
-    return pioneer.data[set].name;
+    name = pioneer.data[set].name;
   } else if (format == 'all') {
-    return allcards.data[set].name;
+    name = allcards.data[set].name;
   }
+
+  return scrubName(name);
 }
 
 export async function setOptions(format) {

@@ -168,11 +168,13 @@ function setRows() {
 }
 
 export async function renderSetCards() {
+  document.getElementById('logpoint').innerHTML = '';
   return buildSet()
     .then(data => {
       return Excel.run(function(context) {
         if (newSheet) {
           var sheets = context.workbook.worksheets;
+          logui(data.name);
           var sheet = sheets.add(data.name);
           sheet.activate();
           sheet.load('name, position');
@@ -184,9 +186,11 @@ export async function renderSetCards() {
       });
     })
     .then(data => {
+      logui('Added sheet');
       return { set: getSetData(data.set, format), props: data.props };
     })
     .then(setData => {
+      logui('Fetched props');
       var cardsList = setData.set.cards;
       var setupArray = [];
       let selectedFieldsCount = 0;
