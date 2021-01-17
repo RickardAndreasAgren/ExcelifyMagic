@@ -259,14 +259,7 @@ export async function renderSetCards() {
           headers.push('Count');
           cardArray.splice(0, 0, headers);
 
-          return Excel.run(async context => {
-            logui('Printfield call');
-            return await printfield(cardArray, 0, 0, context);
-          })
-          .catch(error => {
-            printerror(error.message);
-          });
-          return 0;
+          return printfield(cardArray, 0, 0);
         });
       } catch (error) {
         logui('<<<<<<< error caught >>>>>>>>');

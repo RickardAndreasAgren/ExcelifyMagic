@@ -5,7 +5,7 @@ import Sortkeeper from './sortkeeper.js';
 import { logui } from '../util/printui.js';
 import optionFromAPI from './optionAPI.js';
 
-const preType = ['Legendary','Artifact'];
+const preType = ['Legendary','Artifact', 'Enchantment'];
 
 var primaryKeeper;
 var secondaryKeeper;
@@ -81,7 +81,7 @@ function getType(cardinfo) {
   if (splitType.length > 1) {
     if (preType.includes(splitType[0])) {
       if (splitType[1] == '—') {
-        splitType.splice(1,0);
+        splitType.splice(1,1);
       }
       return splitType[0] + ' ' + splitType[1];
     } else {
