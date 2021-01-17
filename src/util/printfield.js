@@ -1,43 +1,53 @@
-
-import { numberToLetters, lettersToNumber } from '../util/printui.js';
+import { numberToLetters, lettersToNumber } from './columnconverter.js';
+import { logui } from '../util/printui.js';
 
 export async function printfield(
-  twoDimArray, toWriteOn, column = 0, row = 0, context) {
+  twoDimArray,
+  column = 0,
+  row = 0,
+  context
+) {
   // Check if
-  var toPrint = '';
-  if (typeof msg !== 'string') {
-    toPrint = JSON.stringify(msg);
-  } else {
-    toPrint = msg;
-  }
 
-  let arrayX = twoDimArray[0].length;
-  let arrayY = twoDimArray.length;
+  try {
+    let arrayX = twoDimArray[0].length;
+    logui(twoDimArray[0]);
+    let arrayY = twoDimArray.length;
 
-  if (toWriteOn instanceof Excel.Range) {
-    let rangeX = toWriteOn.columnCount;
-    let rangeY = toWriteOn.rowCount;
-    toWriteOn.load(['values', 'columnIndex', 'rowIndex']);
+    var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+
+    var range = context.workbook.getSelectedRange();
+    range.load(['values', 'columnIndex', 'rowIndex','columnCount','rowCount']);
     await context.sync();
+    let rangeX = range.columnCount;
+    let rangeY = range.rowCount;
+
+    logui('Selecting canvas\n');
     if (!(rangeX < arrayX) && !(rangeY < arrayY)) {
+      logui('Populating range\n');
+
       twoWriteOn.values = twoDimArray;
       return context.sync();
+      // =======================================================
     } else {
-      throw new Error('Range too small');
+      logui('Populating sheet\n');
+      let yTarget = arrayY;
+      let xTarget = await numberToLetters(arrayX - 1);
+      let rangeString = 'A1:' + xTarget + yTarget;
+      logui(rangeString);
+      var _range = currentWorksheet.getRange(rangeString);
+      _range.load(['values', 'columnIndex', 'rowIndex','columnCount','rowCount']);
+      logui('Loaded range properties');
+      await context.sync()
+      _range.values = twoDimArray;
+      return context.sync();
+
+      // =======================================================
     }
-    // =======================================================
-  } else if (toWriteOn instanceof Excel.Worksheet) {
-    let xTarget = arrayY;
-    let yTarget = numberToLetters(arrayX);
-
-    var _range = toWriteOn.getRange('A1:' + xTarget + yTarget);
-    _range.values = twoDimArray;
-
-    // =======================================================
-  } else {
-    await Excel.run(async context => {
-      return 'Could not write to range or worksheet';
-    });
+    return 0;
+  } catch (error) {
+    logui('<<<<<<<<<< error caught >>>>>>>>>');
+    logui(error.message);
+    return 0;
   }
-  return 0;
 }

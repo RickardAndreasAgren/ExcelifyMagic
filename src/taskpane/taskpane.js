@@ -5,7 +5,7 @@
  */
 
 import { printcellTest, printcell } from '../util/printcell.js';
-import printfield from '../util/printfield.js';
+import {printfield} from '../util/printfield.js';
 import printerror from '../util/printui.js';
 import { logui } from '../util/printui.js';
 import optionText from '../api/optionText.js';
@@ -172,33 +172,43 @@ export async function renderSetCards() {
       cardsList.forEach(card => {
         setupArray.push(setupCard(card, setData.props, setData.set.name));
       });
-      return Promise.all(setupArray).then(results => {return results})
-      .catch(error => {
-        logui('<<<<<<< rejection hit >>>>>>');
-        logui(error.message);
-      })
+      return Promise.all(setupArray)
+        .then(results => {
+          return results;
+        })
+        .catch(error => {
+          logui('<<<<<<< rejection hit >>>>>>');
+          logui(error.message);
+        });
     })
     .then(cardArray => {
       logui('---------------------setup complete');
-      let props = getSelectedProps();
       let pSort = false;
       let sSort = false;
-      logui('Sorting next');
-      // Translate sorting to array index
-      if (document.getElementById('psortactive').checked) {
-        let pVal = document.getElementById('primarysort').value;
-        pSort = props.indexOf(pVal);
-        logui(pSort);
-      }
-      if (document.getElementById('ssortactive').checked) {
-        let sVal = document.getElementById('secondarysort').value;
-        sSort = props.indexOf(sVal);
-        logui(sSort);
-      }
+      getSelectedProps().then(props => {
+        logui('Sorting next. Options are:');
+        logui(props);
+        logui('Primary sort is: ');
+        logui(document.getElementById('psortactive').checked);
+        if (document.getElementById('psortactive').checked) {
+          let pVal = document.getElementById('primarysort').value;
+          logui(pVal);
+          pSort = props.indexOf(pVal);
+          logui(pSort);
+        }
+
+        logui('Secondary sort is: ');
+        logui(document.getElementById('ssortactive').checked);
+        if (document.getElementById('ssortactive').checked) {
+          let sVal = document.getElementById('secondarysort').value;
+          logui(sVal);
+          sSort = props.indexOf(sVal);
+          logui(sSort);
+        }
+      });
       return new Promise((resolve, reject) => {
         resolve(
           cardArray.sort((a, b) => {
-            logui(a);
             if (pSort) {
               if (a[pSort] < b[pSort]) {
                 return -1;
@@ -221,33 +231,36 @@ export async function renderSetCards() {
       });
     })
     .then(cardArray => {
+      logui('Sorting complete');
       try {
-        cardArray.splice(0, 0, getSelectedProps());
-      } catch (error) {
-        printerror(error);
-      }
-      cardArray[0].push('Expansion');
-      cardArray[0].push('Count');
-      logui(cardArray[0]);
-      logui(cardArray[1]);
-      try {
-        let run = Excel.run(async context => {
-          var range = context.workbook.getSelectedRange();
-          var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
-          let selection = range ? range : currentWorksheet;
-          let result = printfield(cardArray, selection, 0, 0, context);
-          logui(result);
+        return getSelectedProps().then(props => {
+          let headers = [];
+          props.forEach(prop => {
+            headers.push(optionText[prop]);
+          });
+          headers.push('Expansion');
+          headers.push('Count');
+          cardArray.splice(0, 0, headers);
+
+          let run = Excel.run(async context => {
+            logui('Printfield call');
+            return await printfield(cardArray, 0, 0, context);
+          })
+          .catch(error => {
+            printerror(error.message);
+          });
           return 0;
         });
-        resolve(run);
       } catch (error) {
+        logui('<<<<<<< error caught >>>>>>>>');
+        logui(error.message);
         let err = Excel.run(async context => {
           var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
           printcell(error.message, currentWorksheet);
           return context.sync();
         });
         console.error(error);
-        reject(err);
+        throw error;
       }
     })
     .catch(error => {
