@@ -69,14 +69,18 @@ export async function sortOptionsUpdate(option, add) {
 }
 
 function getColour(cardinfo) {
-  let regex = /[A-Z]|[a-z]/;
+  let regex = /[A-Z]|[a-z]/g;
   let colour = '';
   if (!cardinfo.manaCost) {
     return 'C';
   }
   let cArray = cardinfo.manaCost.match(regex);
   if (cArray && cArray.length > 0) {
-    cArray.forEach(element => colour += element);
+    cArray.forEach(element => {
+      if ((colour.length == 0) || (colour.slice(-1) !== element)) {
+        colour += element;
+      }
+    });
   } else {
     colour = 'C';
   }
