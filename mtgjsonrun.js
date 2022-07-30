@@ -25,7 +25,16 @@ function mtgjson(useConfig, callback) {
     const URL = useConfig['URL'];
     const DATA_FILE = useConfig['DATA_FILE'];
     const ETAG_FILE = useConfig['ETAG_FILE'];
-    return fs.readFile(ETAG_FILE).then(data => {
+    return fs.readFile(ETAG_FILE)
+	.catch(error => {
+		console.log(error)
+		if(error.code !== "ENOENT") {
+			throw "Unsupported error"
+		} else {
+			return false
+		}
+	})
+	.then(data => {
       if (data.err) {
         return { err: err };
       }
