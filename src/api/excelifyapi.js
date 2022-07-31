@@ -3,7 +3,6 @@ import pioneer from '../data/pioneercards.json';
 let allcards = {};
 import Sortkeeper from './sortkeeper.js';
 import { logui } from '../util/printui.js';
-import optionFromAPI from './optionAPI.js';
 
 const preType = ['Legendary','Artifact', 'Enchantment'];
 
@@ -25,6 +24,27 @@ export function getSetData(set, format) {
   }
 }
 
+export async function getWorkbooknames() {
+  return await Excel.run(async context => {
+    logui("Getting names");
+    await context.workbook.names.load('name, type');
+    await context.sync()
+    const nameCollection = await context.workbook.names.items;
+    logui(`Got collection of names sized ${nameCollection.length}`);
+    var rangeList = [];
+    nameCollection.forEach(nameItem => {
+      if(nameItem.type == "Range") {
+        rangeList.push(nameItem.name);
+      }
+    });
+    return rangeList;
+  })
+  .catch(error => {
+    console.log(error);
+    logui(error.message);
+  });
+}
+
 function scrubName(text) {
   return text.replace(/[^\w\s]/gi, '')
 }
@@ -37,6 +57,7 @@ export function getSetName(set, format) {
     name = allcards.data[set].name;
   }
 
+  logui(name);
   return scrubName(name);
 }
 
@@ -49,9 +70,9 @@ export async function setOptions(format) {
   }
   let setsList = [];
   for (let set in pObject) {
-    // Logui(set);
+
     setsList.push({ releaseDate: pObject[set].releaseDate,
-      type: pObject[set].code, name: pObject[set].name, });
+      type: pObject[set].code, name: pObject[set].name });
   }
   setsList.sort();
   return setsList;
@@ -112,6 +133,10 @@ function getType(cardinfo) {
   }
 };
 
+function getRarity(cardinfo) {
+  return cardinfo.rarity[0].toUpperCase() + cardinfo.rarity.substring(1);
+}
+
 function getStats(cardinfo) {
   let stats = '';
   if (cardinfo.types.includes('Planeswalker')) {
@@ -129,6 +154,7 @@ const CARDOPTIONS = {
   cbcmc: (cardinfo) => {return cardinfo.convertedManaCost},
   cbtype: getType,
   cbsubtype: (cardinfo) => {return cardinfo.subtypes},
+  cbrarity: getRarity,
   cbstats: getStats,
 };
 

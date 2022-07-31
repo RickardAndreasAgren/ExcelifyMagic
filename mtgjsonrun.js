@@ -26,7 +26,7 @@ function mtgjson(useConfig, callback) {
     const DATA_FILE = useConfig['DATA_FILE'];
     const ETAG_FILE = useConfig['ETAG_FILE'];
     return fs.readFile(ETAG_FILE)
-	.catch(error => {
+	     .catch(error => {
 		console.log(error)
 		if(error.code !== "ENOENT") {
 			throw "Unsupported error"
@@ -38,8 +38,7 @@ function mtgjson(useConfig, callback) {
       if (data.err) {
         return { err: err };
       }
-      console.log('No error');
-      var localEtag = data.toString();
+      var localEtag = data ? data.toString() : "";
 
       var options = {};
       if (localEtag) {
@@ -54,6 +53,7 @@ function mtgjson(useConfig, callback) {
         console.log(res.statusCode);
         var noInternetConnection = !!err;
         if (noInternetConnection || res.statusCode === 304) {
+          console.log('No connection')
           fs.readFile(DATA_FILE)
             .then(data => {
               if (data && data.err) {

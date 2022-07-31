@@ -87,6 +87,12 @@
           </span>
         </li>
         <li class="ms-ListItem">
+          <span class="ms-font-m">
+            Rarity
+            <input type="checkbox" id="cbrarity" name="rarity" value="rarity" />
+          </span>
+        </li>
+        <li class="ms-ListItem">
           <span class="ms-font-m"
             >Strength (P/T) or Loyalty
             <input type="checkbox" id="cbstats" name="stats" value="stats" />
@@ -124,6 +130,13 @@
       >
         <select id="setselector">
           <option id="toberemoved" value="dummy">Test display</option>
+        </select>
+      </div>
+      <div role="select"
+        id="existingRange"
+        class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
+        <select id="rangeselector">
+          <option id="norange" value="norange">Don't use existing range</option>
         </select>
       </div>
       <div class="sizeindicator">

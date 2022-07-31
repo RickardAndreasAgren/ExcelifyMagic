@@ -6,5 +6,6 @@ export default {
   cbcmc: 'CMC',
   cbtype: 'Type',
   cbsubtype: 'Subtype',
+  cbrarity: 'Rarity',
   cbstats: 'Stats',
 }

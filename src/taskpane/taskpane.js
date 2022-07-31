@@ -6,7 +6,7 @@
 
 import { printcellTest, printcell } from '../util/printcell.js';
 import { printfield } from '../util/printfield.js';
-import printerror from '../util/printui.js';
+import { printerror } from '../util/printui.js';
 import { logui } from '../util/printui.js';
 import optionText from '../api/optionText.js';
 import {
@@ -16,7 +16,8 @@ import {
   initKeepers,
   getSetData,
   getSetName,
-  setupCard
+  setupCard,
+  getWorkbooknames
 } from '../api/excelifyapi.js';
 
 var checkBoxes = [];
@@ -34,6 +35,7 @@ var selectedFields = {
   cbcmc: false,
   cbtype: false,
   cbsubtype: false,
+  cbrarity: false,
   cbstats: false,
 };
 
@@ -44,6 +46,7 @@ var checkBoxes = [
   'cbcmc',
   'cbtype',
   'cbsubtype',
+  'cbrarity',
   'cbstats',
 ];
 
@@ -83,11 +86,27 @@ Office.onReady(info => {
           let newOption = document.createElement('option');
           newOption.value = options[set].type;
           newOption.text = options[set].name;
+          logui(`Got ${options[set].name}`)
           document.getElementById('setselector').add(newOption, null);
           document.getElementById('setselector').onchange = function() {
             setRows();
           };
         }
+        logui("Getting ranges");
+        getWorkbooknames()
+        .then(ranges => {
+          logui(ranges.length);
+          for (let rangeOptions = 0; rangeOptions < ranges.length; rangeOptions++) {
+            logui("Creating doc option");
+            let newOption = document.createElement('option');
+            newOption.value = ranges[rangeOptions];
+            newOption.text = ranges[rangeOptions];
+            logui(`Adding ${ranges[rangeOptions]}`);
+            document.getElementById('rangeselector').add(newOption, null);
+          }
+          return 0;
+        });
+
         document.getElementById('toberemoved').remove();
         document.getElementById('selectionpoint').innerHTML = '';
         setRows();
@@ -120,12 +139,14 @@ Office.onReady(info => {
             }
           };
         }
+        logui("Addin ready");
         return options;
       })
       .catch(error => {
         document.getElementById('errorpoint').innerHTML =
           'Shit happened: ' + error.message + ' Stack: ' + error.stack;
       });
+
   }
 });
 
@@ -165,6 +186,10 @@ function setRows() {
   let selectedSet = document.getElementById('setselector').value;
   let setData = getSetData(selectedSet, format);
   document.getElementById('printrows').innerHTML = setData.cards.length;
+}
+
+function setRanges() {
+  let selectedSet = document.getElementById('rangeselector').value;
 }
 
 export async function renderSetCards() {
@@ -307,16 +332,4 @@ async function getSelectedPropsHTML() {
     stringed += optionText[i] + ':' + selectedFields[i] + ', <br/>';
   }
   return stringed;
-}
-
-export async function propsOn() {
-  return getSelectedPropsHTML()
-    .then(printThis => {
-      document.getElementById('selectionpoint').innerHTML = printThis;
-      return 0;
-    })
-    .catch(error => {
-      logui(error);
-      return 0;
-    });
 }

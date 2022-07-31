@@ -1,8 +1,5 @@
 export async function printcell(msg, toWriteOn, column = 0, row = 0, context) {
-  // Check if:
-  // worksheet get A1
-  // range get first
-  // cell, use it
+
   var toPrint = '';
   if (typeof msg !== 'string') {
     toPrint = JSON.stringify(msg);
@@ -21,15 +18,6 @@ export async function printcell(msg, toWriteOn, column = 0, row = 0, context) {
     a1cell.values = [['Range: Trying... ' + targetCol + ' ' + targetRow]];
 
     var selectRange = currentWorksheet.getCell(targetRow, targetCol);
-    /*
-    Var rangeRow =
-      (row + 1) > toWriteOn.rowCount
-        ? toWriteOn.rowIndex
-        : toWriteOn.rowIndex + row;
-    var rangeColumn =
-      (column + 1) > toWriteOn.columnCount
-        ? toWriteOn.columnIndex
-        : toWriteOn.columnIndex + column; */
 
     selectRange.values = [['Range: ' + toPrint]];
     // =======================================================

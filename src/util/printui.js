@@ -1,5 +1,5 @@
 
-async function printerror(msg) {
+export async function printerror(msg) {
   var toPrint = '';
   if (typeof msg !== 'string') {
     toPrint = JSON.stringify(msg);
@@ -13,7 +13,8 @@ async function printerror(msg) {
 
 export async function logui(msg) {
 
-  let existing = document.getElementById('logpoint').innerHTML;
+  let currentText = document.getElementById('logpoint').innerHTML;
+  let existing = currentText ? currentText : "";
   var toPrint = '';
   if (typeof msg !== 'string') {
     toPrint = JSON.stringify(msg);
@@ -21,7 +22,9 @@ export async function logui(msg) {
     toPrint = msg;
   }
 
-  toPrint = existing + ' \n <p>' + toPrint + '</p>';
+  console.log(toPrint);
+
+  toPrint = existing + toPrint + '</br>';
 
   document.getElementById('logpoint').innerHTML = toPrint;
   return 0;

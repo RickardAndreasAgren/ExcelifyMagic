@@ -1,4 +1,5 @@
 
+// for counted calls, use -1 before calling for index offset
 export async function numberToLetters(num) {
   let letters = '';
   while (num >= 0) {
