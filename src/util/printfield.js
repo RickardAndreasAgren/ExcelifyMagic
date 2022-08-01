@@ -41,22 +41,19 @@ export async function printfield(twoDimArray,newSheet) {
           use selection
         */
       } else if ((await validSelection(context,arraySizeX,arraySizeY))) {
-        logui('Populating range\n');
 
         await clearRange(context,name);
         // =======================================================
         /*
-          else check if block worksheet
-            -more than one expansion name?
-            sort existing range on expansion
+            sort existing sheet range on expansion
             if not first
               remove headers
             flag A
             find start
         */
-      } else if(blockSheet()) {
-
-
+      } else if((await blockSheet(context, name, arraySizeX,arraySizeY))) {
+        // copy existing counts
+        await clearRange(context,name);
         // =======================================================
         /*else
           populate from A1
@@ -72,6 +69,7 @@ export async function printfield(twoDimArray,newSheet) {
           'columnCount',
           'rowCount',
         ]);
+        // copy existing counts
         await context.sync();
       }
 
@@ -90,14 +88,13 @@ export async function printfield(twoDimArray,newSheet) {
         printNewRange
         save
       */
-      if("flagA") {
-
-      }
+      await context.sync();
 
       range.values = twoDimArray;
       await context.sync();
-
-      return saveRange(currentWorkbook,name,range.columnCount);
+      await saveRange(currentWorkbook,name,range.columnCount);
+      await context.sync();
+      return 0;
     });
   } catch (error) {
     logui('<<<<<<<<<< error caught >>>>>>>>>');
@@ -133,7 +130,28 @@ async function clearRange(context, name) {
 }
 
 async function blockSheet(context,name,arraySizeX,arraySizeY) {
+  let ownerset = false;
+  // check if block worksheet
+  //  -more than one expansion name?
   // check expansion columns on worksheet
-  // get y length+2
-  // get expansions column, check for not-this value
+  let currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+  if(currentWorksheet.name == name) {
+    ownerset = true;
+  }
+  name = currentWorksheet.name;
+  let column = false;
+  let isLooking = 1;
+  while(10 > isLooking > 1) {
+    let cell = currentWorksheet.getCell(1,numberToLetters(isLooking));
+    await cell.load('values');
+    if(cell.values[0][0] == 'Expansion') {
+      column = numberToLetters(isLooking);
+      islooking = 0;
+    }
+  }
+  let rangeString = `=OFFSET(${name}!$${column}$1,0,0,COUNTA(${name}!$${column}:$${column}),1)`;
+  logui(rangeString);
+  var range = currentWorksheet.getRange(rangeString);
+  // check for not-this value
+  
 }
