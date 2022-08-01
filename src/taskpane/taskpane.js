@@ -303,7 +303,7 @@ export async function renderSetCards() {
           headers.push('Count');
           cardArray.splice(0, 0, headers);
 
-          return printfield(cardArray, 0, 0);
+          return printfield(cardArray, newSheet);
         });
       } catch (error) {
         logui('<<<<<<< error caught >>>>>>>>');
