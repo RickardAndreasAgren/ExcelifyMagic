@@ -164,7 +164,7 @@ async function getSelectedProps() {
   return activeProps;
 }
 
-async function buildSet() {
+export async function buildSet() {
   let setlist = document.getElementById('setselector');
   let activeSet = setlist[setlist.selectedIndex].value;
   let name = getSetName(activeSet, format);
@@ -216,30 +216,68 @@ export async function renderSetCards() {
     })
     .then(setData => {
       logui('Fetched props');
-      var cardsList = setData.set.cards;
-      var setupArray = [];
-      let selectedFieldsCount = 0;
-      Object.keys(selectedFields).forEach(field => {
-        if (selectedFields[field] == true) {
-          logui(field);
-          selectedFieldsCount += 1;
-        }
-      });
-      if (selectedFieldsCount < 1) {
-        throw new Error('No options selected');
-      }
-      cardsList.forEach(card => {
-        setupArray.push(setupCard(card, setData.props, setData.set.name));
-      });
-      return Promise.all(setupArray)
-        .then(results => {
-          return results;
-        })
-        .catch(error => {
-          logui('<<<<<<< rejection hit >>>>>>');
-          logui(error.message);
-          throw error;
+      return prepareSet(setData);
+
+    })
+    .then(cardArray => {
+      logui('Sorting complete');
+      try {
+        return getSelectedProps().then(props => {
+          let headers = [];
+          props.forEach(prop => {
+            headers.push(optionText[prop]);
+          });
+          headers.push('Expansion');
+          headers.push('Count');
+          cardArray.splice(0, 0, headers);
+
+          return printfield(cardArray, newSheet);
         });
+      } catch (error) {
+        logui('<<<<<<< error caught >>>>>>>>');
+        logui(error.message);
+        let err = Excel.run(async context => {
+          var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+          printcell(error.message, currentWorksheet);
+          return context.sync();
+        });
+        console.error(error);
+        throw error;
+      }
+    })
+    .catch(error => {
+      if (error.code === 'ItemAlreadyExists') {
+        printerror('Worksheet name is occupied.');
+      } else {
+        printerror(error.message);
+      }
+    });
+}
+
+export async function prepareSet(setData) {
+  var cardsList = setData.set.cards;
+  var setupArray = [];
+  let selectedFieldsCount = 0;
+  Object.keys(selectedFields).forEach(field => {
+    if (selectedFields[field] == true) {
+      logui(field);
+      selectedFieldsCount += 1;
+    }
+  });
+  if (selectedFieldsCount < 1) {
+    throw new Error('No options selected');
+  }
+  cardsList.forEach(card => {
+    setupArray.push(setupCard(card, setData.props, setData.set.name));
+  });
+  return Promise.all(setupArray)
+    .then(results => {
+      return results;
+    })
+    .catch(error => {
+      logui('<<<<<<< rejection hit >>>>>>');
+      printerror(error.message);
+      throw error;
     })
     .then(cardArray => {
       let pSort = false;
@@ -291,39 +329,33 @@ export async function renderSetCards() {
           });
         });
     })
-    .then(cardArray => {
-      logui('Sorting complete');
-      try {
-        return getSelectedProps().then(props => {
-          let headers = [];
-          props.forEach(prop => {
-            headers.push(optionText[prop]);
-          });
-          headers.push('Expansion');
-          headers.push('Count');
-          cardArray.splice(0, 0, headers);
-
-          return printfield(cardArray, newSheet);
-        });
-      } catch (error) {
-        logui('<<<<<<< error caught >>>>>>>>');
-        logui(error.message);
-        let err = Excel.run(async context => {
-          var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
-          printcell(error.message, currentWorksheet);
-          return context.sync();
-        });
-        console.error(error);
-        throw error;
-      }
-    })
     .catch(error => {
-      if (error.code === 'ItemAlreadyExists') {
-        printerror('Worksheet name is occupied.');
-      } else {
-        printerror(error.message);
-      }
+      logui('<<<<<<< options and sorting failure >>>>>>');
+      printerror(error.message);
+      throw error;
     });
+}
+
+export async function getSortPriorities() {
+  let pSort = null;
+  let sSort = null;
+  logui(document.getElementById('psortactive').checked);
+  if (document.getElementById('psortactive').checked) {
+    let pVal = document.getElementById('primarysort').value;
+    logui(pVal);
+    pSort = props.indexOf(pVal);
+    logui(pSort);
+  }
+
+  logui('Secondary sort is: ');
+  logui(document.getElementById('ssortactive').checked);
+  if (document.getElementById('ssortactive').checked) {
+    let sVal = document.getElementById('secondarysort').value;
+    logui(sVal);
+    sSort = props.indexOf(sVal);
+    logui(sSort);
+  }
+  return {pst: pSort, sst: sSort};
 }
 
 async function getSelectedPropsHTML() {

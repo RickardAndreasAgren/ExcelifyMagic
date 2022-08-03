@@ -116,6 +116,10 @@ function getColour(cardinfo) {
   return colour;
 };
 
+function getConvertedManaCost(cardinfo) {
+  return cardinfo.manaValue;
+}
+
 function getType(cardinfo) {
   let fulltype = cardinfo.type;
   let splitType = fulltype.split(' ');
@@ -151,7 +155,7 @@ const CARDOPTIONS = {
   cbname: (cardinfo) => {return cardinfo.name},
   cbnumber: (cardinfo) => {return cardinfo.number},
   cbcolor: getColour,
-  cbcmc: (cardinfo) => {return cardinfo.convertedManaCost},
+  cbcmc: getConvertedManaCost,
   cbtype: getType,
   cbsubtype: (cardinfo) => {return cardinfo.subtypes},
   cbrarity: getRarity,

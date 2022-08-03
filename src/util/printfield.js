@@ -1,21 +1,26 @@
 import { numberToLetters, lettersToNumber } from './columnconverter.js';
 import { logui } from '../util/printui.js';
+import { prepareSet, getSortPriorities } from '../taskpane/taskpane.js';
+import { getSetData } from '../api/excelifyapi.js';
 
 export async function printfield(twoDimArray,newSheet) {
   try {
     await Excel.run(async context => {
       let headers = Object.assign({},twoDimArray[0]);
-      let sheetOwner = false;
       let arraySizeX = twoDimArray[0].length;
       let arraySizeY = twoDimArray.length;
       let yTarget = arraySizeY;
       let xTarget = await numberToLetters(arraySizeX - 1);
       let setlist = document.getElementById('setselector');
       let name = setlist[setlist.selectedIndex].value;
-      var storedCount = [];
 
       var currentWorkbook = context.workbook;
       var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+
+      let inUseRange = currentWorksheet.getUsedRange();
+      inUseRange.load('columnCount','address');
+      await context.sync();
+      let rangeX = inUseRange.columnCount;
 
       var selectedRange = context.workbook.getSelectedRange();
       selectedRange.load([
@@ -25,15 +30,10 @@ export async function printfield(twoDimArray,newSheet) {
           'columnCount',
           'rowCount',
       ]);
-      await context.sync();
-
-      /* OBS! Första set i block dikterar range namn*/
-      let rangeBusy = currentWorkbook.names.getItemOrNullObject(name);
-      //  check if worksheet match set name
-      //    -get workbook.names, foreach: shares workbook with current
 
       await context.sync();
       if(newSheet) {
+        range = selectedRange;
         null;
         // =======================================================
         /*
@@ -41,25 +41,54 @@ export async function printfield(twoDimArray,newSheet) {
           use selection
         */
       } else if ((await validSelection(context,arraySizeX,arraySizeY))) {
-
+        range = selectedRange;
         await clearRange(context,name);
         // =======================================================
         /*
             sort existing sheet range on expansion
-            if not first
-              remove headers
-            flag A
-            find start
-        */
-      } else if((await blockSheet(context, name, arraySizeX,arraySizeY))) {
-        // copy existing counts
-        await clearRange(context,name);
-        // =======================================================
-        /*else
-          populate from A1
+            flag saveCounts
         */
       } else {
-        let rangeString = 'A1:' + xTarget + yTarget;
+        let blocks = await blockSheet(context, name, arraySizeX,arraySizeY)
+        if(blocks.length > 1) {
+          const saveName = name;
+          for (const [key, value] of Object.entries(expansions)) {
+            if(key == name) {
+              continue;
+            }
+            // check against sheet name, set name when found
+            let checkSheets = context.workbook.worksheets.getItem(key);
+            if(checkSheets) {
+              name = checkSheets;
+              checkSheets.activate();
+            }
+            // get other sets
+            let extraSet = await buildSet()
+            .then(data => {
+              return { set: getSetData(data.set, format), props: data.props }
+            })
+            .then(data => {
+              return prepareSet(data);
+            })
+            twoDimArray.concat(extraSet);
+          }
+          // link up all sets
+          // xTarget, yTarget
+
+          let arraySizeX = twoDimArray[0].length;
+          let arraySizeY = twoDimArray.length;
+          let yTarget = arraySizeY;
+          let xTarget = await numberToLetters(arraySizeX - 1);
+
+          let rangeString = 'A1:' + xTarget + yTarget;
+          logui(rangeString);
+          // =======================================================
+          /*else
+            populate from A1
+          */
+        } else {
+          let rangeString = 'A1:' + xTarget + yTarget;
+        }
         logui(rangeString);
         var range = currentWorksheet.getRange(rangeString);
         range.load([
@@ -69,27 +98,19 @@ export async function printfield(twoDimArray,newSheet) {
           'columnCount',
           'rowCount',
         ]);
-        // copy existing counts
+        await context.sync();
+        twoDimArray = await saveCounts(context, range, twoDimArray, currentRangeX);
+        await clearRange(context,name);
         await context.sync();
       }
 
       // =======================================================
       /*
-        if flag A {
-          select entire sheet
-          get other sets with columns selected
-          remove headers from not-top set
-          apply sorting
-          combine
-        }
-        set end
-        select range
-        take counts from sheet into new range
         printNewRange
         save
       */
-      await context.sync();
 
+      await context.sync();
       range.values = twoDimArray;
       await context.sync();
       await saveRange(currentWorkbook,name,range.columnCount);
@@ -126,7 +147,6 @@ async function clearRange(context, name) {
     logui('Replacing existing named range');
     await context.sync();
   }
-  await context.sync();
 }
 
 async function blockSheet(context,name,arraySizeX,arraySizeY) {
@@ -151,7 +171,56 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   }
   let rangeString = `=OFFSET(${name}!$${column}$1,0,0,COUNTA(${name}!$${column}:$${column}),1)`;
   logui(rangeString);
-  var range = currentWorksheet.getRange(rangeString);
-  // check for not-this value
-  
+  var columnRange = currentWorksheet.getRange(rangeString);
+  await columnRange.load('values');
+  let expansions = {};
+  columnRange.values.forEach(rowWithColumn => expansionList[rowWithColumn[0]] = true);
+  //
+  return expansions;
+}
+
+async function saveCounts(context, range, twoDimArray, currentRangeX) {
+  // get sort priority, (always starts with expansion)
+  let sorters = await getSortPriorities();
+  let pSort = sorters.pst ? sorters.pst : false;
+  let sSort = sorters.sst ? sorters.sst : false;
+  let countIndex = twoDimArray[0].length-1;
+
+  const threeSort = (a, b) => {
+    if (a[countIndex] < b[countIndex]) {
+      return -1;
+    }
+    if (a[countIndex] > b[countIndex]) {
+      return 1;
+    }
+
+    if (pSort && !!a[pSort] && !!b[pSort]) {
+      if (a[pSort] < b[pSort]) {
+        return -1;
+      }
+      if (a[pSort] > b[pSort]) {
+        return 1;
+      }
+    }
+    if (sSort && !!a[sSort] && !!b[sSort]) {
+      if (a[sSort] < b[sSort]) {
+        return -1;
+      }
+      if (a[sSort] > b[sSort]) {
+        return 1;
+      }
+    }
+    return 0;
+  };
+
+  let sheetValues = range.values;
+  // add expansion sort
+  sheetValues.sort(threeSort);
+  twoDimArray.sort(threeSort);
+  let sheetCountColumn = currentRangeX < 2 ? sheetValues[index].length - 1 : currentRangeX
+  twoDimArray.forEach((element,index) => {
+    twoDimArray[index][element.length-1] = sheetValues[index][sheetCountColumn]
+  })
+
+  return twoDimArray
 }
