@@ -138,7 +138,7 @@ export async function printfield(twoDimArray, newSheet, format) {
       range.values = twoDimArray;
       await context.sync();
       logui('saving new OFFSET range')
-      await saveRange(currentWorkbook,name,range.columnCount);
+      await saveRange(currentWorkbook,currentWorksheet.name,range.columnCount);
       await context.sync();
       return 0;
     });
