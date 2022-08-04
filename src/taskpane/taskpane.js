@@ -86,7 +86,7 @@ Office.onReady(info => {
           let newOption = document.createElement('option');
           newOption.value = options[set].type;
           newOption.text = options[set].name;
-          logui(`Got ${options[set].name}`)
+          //logui(`Got ${options[set].name}`)
           document.getElementById('setselector').add(newOption, null);
           document.getElementById('setselector').onchange = function() {
             setRows();
@@ -97,11 +97,9 @@ Office.onReady(info => {
         .then(ranges => {
           logui(ranges.length);
           for (let rangeOptions = 0; rangeOptions < ranges.length; rangeOptions++) {
-            logui("Creating doc option");
             let newOption = document.createElement('option');
             newOption.value = ranges[rangeOptions];
             newOption.text = ranges[rangeOptions];
-            logui(`Adding ${ranges[rangeOptions]}`);
             document.getElementById('rangeselector').add(newOption, null);
           }
           return 0;

@@ -12,15 +12,17 @@ export async function printfield(twoDimArray,newSheet) {
       let yTarget = arraySizeY;
       let xTarget = await numberToLetters(arraySizeX - 1);
       let setlist = document.getElementById('setselector');
-      let name = setlist[setlist.selectedIndex].value;
+      var name = setlist[setlist.selectedIndex].value;
 
       var currentWorkbook = context.workbook;
       var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
 
-      let inUseRange = currentWorksheet.getUsedRange();
+      var inUseRange = currentWorksheet.getUsedRange();
       inUseRange.load('columnCount','address');
       await context.sync();
       let rangeX = inUseRange.columnCount;
+      var range = currentWorksheet.getUsedRange();
+      var rangeString = '';
 
       var selectedRange = context.workbook.getSelectedRange();
       selectedRange.load([
@@ -32,7 +34,9 @@ export async function printfield(twoDimArray,newSheet) {
       ]);
 
       await context.sync();
+      let selectionValid = await validSelection(selectedRange,arraySizeX,arraySizeY);
       if(newSheet) {
+        logui('Fresh sheet!')
         range = selectedRange;
         null;
         // =======================================================
@@ -40,16 +44,19 @@ export async function printfield(twoDimArray,newSheet) {
         if selection
           use selection
         */
-      } else if ((await validSelection(context,arraySizeX,arraySizeY))) {
+      } else if (selectionValid) {
+        logui(`Using a valid range selection`);
         range = selectedRange;
-        await clearRange(context,name);
+        await clearRange(context,selectedRange);
         // =======================================================
         /*
             sort existing sheet range on expansion
             flag saveCounts
         */
       } else {
-        let blocks = await blockSheet(context, name, arraySizeX,arraySizeY)
+        logui('Not a valid selection, looking up things')
+        // Log anything that moves
+        let blocks = await blockSheet(context, name, arraySizeX,arraySizeY);
         if(blocks.length > 1) {
           const saveName = name;
           for (const [key, value] of Object.entries(expansions)) {
@@ -80,17 +87,17 @@ export async function printfield(twoDimArray,newSheet) {
           let yTarget = arraySizeY;
           let xTarget = await numberToLetters(arraySizeX - 1);
 
-          let rangeString = 'A1:' + xTarget + yTarget;
+          rangeString = 'A1:' + xTarget + yTarget;
           logui(rangeString);
           // =======================================================
           /*else
             populate from A1
           */
         } else {
-          let rangeString = 'A1:' + xTarget + yTarget;
+          rangeString = 'A1:' + xTarget + yTarget;
         }
         logui(rangeString);
-        var range = currentWorksheet.getRange(rangeString);
+        range = currentWorksheet.getRange(rangeString);
         range.load([
           'values',
           'columnIndex',
@@ -100,7 +107,7 @@ export async function printfield(twoDimArray,newSheet) {
         ]);
         await context.sync();
         twoDimArray = await saveCounts(context, range, twoDimArray, currentRangeX);
-        await clearRange(context,name);
+        await clearRange(context,range);
         await context.sync();
       }
 
@@ -109,10 +116,21 @@ export async function printfield(twoDimArray,newSheet) {
         printNewRange
         save
       */
+      range.load([
+        'values',
+      ]);
 
+      rangeString = `=OFFSET(${name}!$A$1,0,0,COUNTA(${name}!$A:$A),${xTarget})`;
+      logui(rangeString);
+      currentWorksheet.names.add(name,rangeString,"");
       await context.sync();
+      logui(`${range.values}`);
+      logui(`${typeof twoDimArray}`);
+      logui(`${twoDimArray[0]}`);
+      logui('Assigning values to sheet range');
       range.values = twoDimArray;
       await context.sync();
+      logui('saving new OFFSET range')
       await saveRange(currentWorkbook,name,range.columnCount);
       await context.sync();
       return 0;
@@ -139,9 +157,9 @@ async function validSelection(selectedRange,arraySizeX,arraySizeY) {
   }
 }
 
-async function clearRange(context, name) {
-  let rangeBusy = context.workbook.names.getItemOrNullObject(name);
+async function clearRange(context, rangeBusy) {
   if(rangeBusy) {
+    logui(`range is ${rangeBusy.toString()}`)
     rangeBusy.clear();
     rangeBusy.delete();
     logui('Replacing existing named range');
@@ -155,6 +173,8 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   //  -more than one expansion name?
   // check expansion columns on worksheet
   let currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+  currentWorksheet.load('name');
+  await context.sync();
   if(currentWorksheet.name == name) {
     ownerset = true;
   }
@@ -163,7 +183,8 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   let isLooking = 1;
   while(10 > isLooking > 1) {
     let cell = currentWorksheet.getCell(1,numberToLetters(isLooking));
-    await cell.load('values');
+    cell.load('values');
+    await context.sync();
     if(cell.values[0][0] == 'Expansion') {
       column = numberToLetters(isLooking);
       islooking = 0;
@@ -171,11 +192,15 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   }
   let rangeString = `=OFFSET(${name}!$${column}$1,0,0,COUNTA(${name}!$${column}:$${column}),1)`;
   logui(rangeString);
-  var columnRange = currentWorksheet.getRange(rangeString);
-  await columnRange.load('values');
+  currentWorksheet.names.add(name,rangeString,"");
+  await context.sync();
+  var columnRange = currentWorksheet.names.getItem(name);
+  columnRange.load('values');
+  await context.sync();
   let expansions = {};
-  columnRange.values.forEach(rowWithColumn => expansionList[rowWithColumn[0]] = true);
+  columnRange.values.forEach(rowWithColumn => expansions[rowWithColumn[0]] = true);
   //
+  logui(`Blocksheet check yielded ${expansions.length}`)
   return expansions;
 }
 
