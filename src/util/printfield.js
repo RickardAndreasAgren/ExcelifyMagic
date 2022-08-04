@@ -57,7 +57,7 @@ export async function printfield(twoDimArray,newSheet) {
         logui('Not a valid selection, looking up things')
         // Log anything that moves
         let blocks = await blockSheet(context, name, arraySizeX,arraySizeY);
-        if(blocks.length > 1) {
+        if(Object.keys(blocks).length > 1) {
           const saveName = name;
           for (const [key, value] of Object.entries(expansions)) {
             if(key == name) {
@@ -183,11 +183,10 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   let isLooking = 0;
   while(10 > isLooking && isLooking >= 0) {
     logui(`Checking headers`);
-    // kollade rader istället för kolumn?
     let cell = currentWorksheet.getCell(0,isLooking);
     cell.load('values');
     await context.sync();
-    logui(`${cell.values[0]}`)
+    logui(`${cell.values[0][0]}`)
     if(cell.values[0][0] == 'Expansion') {
       column = isLooking;
       break;
@@ -208,7 +207,8 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   async function getUniqueValues(arr) {
     var obj = {};
     for(let i = 0; i < arr.length; i++) {
-      if(!Object.keys(obj).includes(arr[i][column])) {
+      if(!Object.keys(obj).includes(arr[i][column]) && arr[i][column] !== 'Expansion') {
+        logui(`Adding ${arr[i][column]}`)
         obj[arr[i][column]] = true;
       }
     }
@@ -216,7 +216,7 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   }
   let expansions = await getUniqueValues(columnRange.values);
 
-  logui(`Blocksheet check yielded ${expansions.length}`)
+  logui(`Blocksheet check yielded ${expansions}`)
   return expansions;
 }
 
