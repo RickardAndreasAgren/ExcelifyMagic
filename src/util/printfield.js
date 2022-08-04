@@ -189,7 +189,7 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
     await context.sync();
     logui(`${cell.values[0]}`)
     if(cell.values[0][0] == 'Expansion') {
-      column = await numberToLetters(isLooking);
+      column = isLooking;
       break;
     }
     isLooking++
