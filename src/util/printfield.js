@@ -195,6 +195,10 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
     }
     isLooking++
   }
+  if(!column) {
+    return false;
+  }
+
   var columnRange = currentWorksheet.names.getItemOrNullObject(name);
   if(!ownerset) {
     logui(`Selecting used range`);
