@@ -12,7 +12,7 @@ export async function printfield(twoDimArray, newSheet, format) {
       let yTarget = arraySizeY;
       let xTarget = await numberToLetters(arraySizeX - 1);
       let setlist = document.getElementById('setselector');
-      var name = setlist[setlist.selectedIndex].value;
+      var name = setlist[setlist.selectedIndex].text;
 
       var currentWorkbook = context.workbook;
       var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
