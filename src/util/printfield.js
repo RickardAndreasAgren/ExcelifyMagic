@@ -210,7 +210,7 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   Array.prototype.unique = function() {
     var obj = {};
     for(let i = 0; i < this.length; i++) {
-      if(!obj.keys.includes(this[i][column])) {
+      if(!Object.Keys(obj).includes(this[i][column])) {
         obj[this[i][column]] = true;
       }
     }
