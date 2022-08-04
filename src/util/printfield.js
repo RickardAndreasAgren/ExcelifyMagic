@@ -88,10 +88,10 @@ export async function printfield(twoDimArray, newSheet, format) {
           // link up all sets
           // xTarget, yTarget
 
-          let arraySizeX = twoDimArray[0].length;
-          let arraySizeY = twoDimArray.length;
-          let yTarget = arraySizeY;
-          let xTarget = await numberToLetters(arraySizeX - 1);
+          arraySizeX = twoDimArray[0].length;
+          arraySizeY = twoDimArray.length;
+          yTarget = arraySizeY;
+          xTarget = await numberToLetters(arraySizeX - 1);
 
           rangeString = 'A1:' + xTarget + yTarget;
           logui(rangeString);
