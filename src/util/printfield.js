@@ -3,7 +3,7 @@ import { logui } from '../util/printui.js';
 import { prepareSet, getSortPriorities, buildSet } from '../taskpane/taskpane.js';
 import { getSetData } from '../api/excelifyapi.js';
 
-export async function printfield(twoDimArray,newSheet) {
+export async function printfield(twoDimArray, newSheet, format) {
   try {
     await Excel.run(async context => {
       let headers = Object.assign({},twoDimArray[0]);

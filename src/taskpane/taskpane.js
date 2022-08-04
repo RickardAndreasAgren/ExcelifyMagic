@@ -229,7 +229,7 @@ export async function renderSetCards() {
           headers.push('Count');
           cardArray.splice(0, 0, headers);
 
-          return printfield(cardArray, newSheet);
+          return printfield(cardArray, newSheet, format);
         });
       } catch (error) {
         logui('<<<<<<< error caught >>>>>>>>');
