@@ -124,6 +124,7 @@ export async function printfield(twoDimArray, newSheet, format) {
         printNewRange
         save
       */
+      range = currentWorksheet.getRange(rangeString);
       range.load([
         'values',
       ]);
