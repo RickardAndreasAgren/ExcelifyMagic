@@ -111,7 +111,7 @@ export async function printfield(twoDimArray, newSheet, format) {
           'rowCount',
         ]);
         await context.sync();
-        twoDimArray = await saveCounts(context, range, twoDimArray, currentRangeX);
+        twoDimArray = await saveCounts(context, range, twoDimArray, xTarget);
         await clearRange(context,range);
         await context.sync();
       }
@@ -222,7 +222,7 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   return expansions;
 }
 
-async function saveCounts(context, range, twoDimArray, currentRangeX) {
+async function saveCounts(context, range, twoDimArray, arraySizeX) {
   // get sort priority, (always starts with expansion)
   let sorters = await getSortPriorities();
   let pSort = sorters.pst ? sorters.pst : false;
