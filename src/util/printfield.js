@@ -57,7 +57,7 @@ export async function printfield(twoDimArray, newSheet, format) {
         logui('Not a valid selection, looking up things')
         // Log anything that moves
         let blocks = await blockSheet(context, name, arraySizeX,arraySizeY);
-        if(Object.keys(blocks).length > 1) {
+        if(blocks && Object.keys(blocks).length > 1) {
           const saveName = name;
           for (const [key, value] of Object.entries(blocks)) {
             if(key == name) {
@@ -264,7 +264,7 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
   // add expansion sort
   sheetValues.sort(threeSort);
   twoDimArray.sort(threeSort);
-  let sheetCountColumn = currentRangeX < 2 ? sheetValues[index].length - 1 : currentRangeX
+  let sheetCountColumn = arraySizeX < 2 ? sheetValues[index].length - 1 : arraySizeX
   twoDimArray.forEach((element,index) => {
     twoDimArray[index][element.length-1] = sheetValues[index][sheetCountColumn]
   })
