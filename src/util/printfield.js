@@ -59,7 +59,7 @@ export async function printfield(twoDimArray,newSheet) {
         let blocks = await blockSheet(context, name, arraySizeX,arraySizeY);
         if(Object.keys(blocks).length > 1) {
           const saveName = name;
-          for (const [key, value] of Object.entries(expansions)) {
+          for (const [key, value] of Object.entries(blocks)) {
             if(key == name) {
               continue;
             }
