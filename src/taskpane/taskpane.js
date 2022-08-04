@@ -166,7 +166,7 @@ export async function buildSet(setCode = null) {
   let setlist = document.getElementById('setselector');
   let activeSet =  setCode ? setCode : setlist[setlist.selectedIndex].value;
   let name = getSetName(activeSet, format);
-  return getSelectedProps().then(props => {
+  return await getSelectedProps().then(props => {
     return { set: activeSet, name: name, props: props };
   });
 }
@@ -335,6 +335,7 @@ export async function prepareSet(setData) {
 }
 
 export async function getSortPriorities() {
+  let props = await getSelectedProps();
   let pSort = null;
   let sSort = null;
   logui(document.getElementById('psortactive').checked);

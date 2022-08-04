@@ -57,7 +57,9 @@ export async function printfield(twoDimArray, newSheet, format) {
         logui('Not a valid selection, looking up things')
         // Log anything that moves
         let blocks = await blockSheet(context, name, arraySizeX,arraySizeY);
+        logui(`Type of result from blockcheck ${typeof blocks}`);
         if(blocks && Object.keys(blocks).length > 1) {
+          logui('Proceeding with blocksheet logic')
           const saveName = name;
           for (const [key, value] of Object.entries(blocks)) {
             if(key == name) {
@@ -99,6 +101,7 @@ export async function printfield(twoDimArray, newSheet, format) {
             populate from A1
           */
         } else {
+          logui('Fallback to basic selection');
           rangeString = 'A1:' + xTarget + yTarget;
         }
         logui(rangeString);
@@ -228,7 +231,7 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
 
 async function saveCounts(context, range, twoDimArray, arraySizeX) {
   // get sort priority, (always starts with expansion)
-  let sorters = await getSortPriorities();
+  let sorters = await getSortPriorities(proplist);
   let pSort = sorters.pst ? sorters.pst : false;
   let sSort = sorters.sst ? sorters.sst : false;
   let countIndex = twoDimArray[0].length-1;
