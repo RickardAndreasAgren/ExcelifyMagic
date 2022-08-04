@@ -162,10 +162,10 @@ async function getSelectedProps() {
   return activeProps;
 }
 
-export async function buildSet(setName = null) {
+export async function buildSet(setCode = null) {
   let setlist = document.getElementById('setselector');
-  let activeSet = setlist[setlist.selectedIndex].value;
-  let name = setName ? setName : getSetName(activeSet, format);
+  let activeSet =  setCode ? setCode : setlist[setlist.selectedIndex].value;
+  let name = getSetName(activeSet, format);
   return getSelectedProps().then(props => {
     return { set: activeSet, name: name, props: props };
   });
@@ -354,6 +354,17 @@ export async function getSortPriorities() {
     logui(sSort);
   }
   return {pst: pSort, sst: sSort};
+}
+
+export function getSetCode(name) {
+  let setlist = document.getElementById('setselector');
+
+  let index = setlist.findIndex(element => {
+    if(element.text == name) {
+      return element;
+    };
+  });
+  return setlist[index].value;
 }
 
 async function getSelectedPropsHTML() {

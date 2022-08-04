@@ -16,7 +16,7 @@ export async function initKeepers() {
   secondaryKeeper.setOverride(primaryKeeper.overrideOption);
 }
 
-export function getSetData(set, format) {
+export async function getSetData(set, format) {
   if (format == 'pioneer') {
     return pioneer.data[set];
   } else if (format == 'all') {
@@ -70,7 +70,6 @@ export async function setOptions(format) {
   }
   let setsList = [];
   for (let set in pObject) {
-
     setsList.push({ releaseDate: pObject[set].releaseDate,
       type: pObject[set].code, name: pObject[set].name });
   }

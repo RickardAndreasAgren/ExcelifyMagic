@@ -1,6 +1,6 @@
 import { numberToLetters, lettersToNumber } from './columnconverter.js';
 import { logui } from '../util/printui.js';
-import { prepareSet, getSortPriorities, buildSet } from '../taskpane/taskpane.js';
+import { prepareSet, getSortPriorities, buildSet, getSetCode} from '../taskpane/taskpane.js';
 import { getSetData } from '../api/excelifyapi.js';
 
 export async function printfield(twoDimArray, newSheet, format) {
@@ -63,6 +63,7 @@ export async function printfield(twoDimArray, newSheet, format) {
             if(key == name) {
               continue;
             }
+            logui(`Preparing ${key}`)
             // check against sheet name, set name when found
             let checkSheets = context.workbook.worksheets.getItem(key);
             if(checkSheets) {
@@ -70,14 +71,20 @@ export async function printfield(twoDimArray, newSheet, format) {
               checkSheets.activate();
             }
             // get other sets
-            let extraSet = await buildSet(key)
-            .then(data => {
-              return { set: getSetData(data.set, format), props: data.props }
+            let extraSet = await getSetCode(key)
+            .then(async code => {
+              return buildSet(code);
+            })
+            .then(async data => {
+              let setData = await getSetData(data.set, format);
+              return { set: setdata, props: data.props }
             })
             .then(data => {
               return prepareSet(data);
             })
+            logui(`Extending data array with ${extraSet.length} rows`);
             twoDimArray.concat(extraSet);
+            logui(`Now at ${twoDimArray.length} rows.`)
           }
           // link up all sets
           // xTarget, yTarget
