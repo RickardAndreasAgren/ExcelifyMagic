@@ -274,6 +274,7 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
   twoDimArray.forEach((element,index) => {
     twoDimArray[index][element.length-1] = sheetValues[index][sheetCountColumn]
   })
+  twoDimArray.splice(0,0,headers);
 
   return twoDimArray
 }
