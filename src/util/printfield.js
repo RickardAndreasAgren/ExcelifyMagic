@@ -61,29 +61,28 @@ export async function printfield(twoDimArray, newSheet, format) {
           logui('Proceeding with blocksheet logic')
           const saveName = name;
           for (const [key, value] of Object.entries(blocks)) {
-            if(key == name) {
-              continue;
+            if(key != saveName) {
+              logui(`Preparing ${key}`)
+              // check against sheet name, set name when found
+              let checkSheets = context.workbook.worksheets.getItem(key);
+              if(checkSheets) {
+                name = checkSheets;
+                checkSheets.activate();
+              }
+              // get other sets
+              let setCode = getSetCode(key);
+              let extraSet = await buildSet(setCode)
+              .then(async data => {
+                let setData = getSetData(data.set, format);
+                return { set: setData, props: data.props }
+              })
+              .then(data => {
+                return prepareSet(data);
+              })
+              logui(`Extending data array with ${extraSet.length} rows`);
+              twoDimArray = twoDimArray.concat(extraSet);
+              logui(`Now at ${twoDimArray.length} rows.`)
             }
-            logui(`Preparing ${key}`)
-            // check against sheet name, set name when found
-            let checkSheets = context.workbook.worksheets.getItem(key);
-            if(checkSheets) {
-              name = checkSheets;
-              checkSheets.activate();
-            }
-            // get other sets
-            let setCode = getSetCode(key);
-            let extraSet = await buildSet(setCode)
-            .then(async data => {
-              let setData = getSetData(data.set, format);
-              return { set: setData, props: data.props }
-            })
-            .then(data => {
-              return prepareSet(data);
-            })
-            logui(`Extending data array with ${extraSet.length} rows`);
-            twoDimArray = twoDimArray.concat(extraSet);
-            logui(`Now at ${twoDimArray.length} rows.`)
           }
           // link up all sets
           // xTarget, yTarget
