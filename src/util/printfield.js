@@ -76,7 +76,7 @@ export async function printfield(twoDimArray, newSheet, format) {
               return buildSet(code);
             })
             .then(async data => {
-              let setData = await getSetData(data.set, format);
+              let setData = getSetData(data.set, format);
               return { set: setdata, props: data.props }
             })
             .then(data => {
