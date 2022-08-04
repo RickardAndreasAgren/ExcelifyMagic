@@ -162,10 +162,10 @@ async function getSelectedProps() {
   return activeProps;
 }
 
-export async function buildSet() {
+export async function buildSet(setName = null) {
   let setlist = document.getElementById('setselector');
   let activeSet = setlist[setlist.selectedIndex].value;
-  let name = getSetName(activeSet, format);
+  let name = setName ? setName : getSetName(activeSet, format);
   return getSelectedProps().then(props => {
     return { set: activeSet, name: name, props: props };
   });

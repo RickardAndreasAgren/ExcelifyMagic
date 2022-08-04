@@ -70,7 +70,7 @@ export async function printfield(twoDimArray, newSheet, format) {
               checkSheets.activate();
             }
             // get other sets
-            let extraSet = await buildSet()
+            let extraSet = await buildSet(key)
             .then(data => {
               return { set: getSetData(data.set, format), props: data.props }
             })
