@@ -194,28 +194,27 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
     }
     isLooking++
   }
-  var columnRange = null;
-  if(ownerset) {
-    if(currentWorksheet.names.getItem(name) != null) {
-      columnRange = currentWorksheet.names.getItem(name);
-    }
+  var columnRange = currentWorksheet.names.getItemOrNullObject(name);
+  if(!ownerset) {
+    logui(`Selecting used range`);
+    columnRange = currentWorksheet.getUsedRange();
+  } else {
+    logui(`Selecting ${name}`);
   }
-  if(columnRange === null) {
-    columnRange = currentWorksheet.getUsedRange()
-  }
-  logui(`Selecting ${name}`);
+
   columnRange.load('values');
   await context.sync();
 
-  Array.prototype.unique = function() {
+  async function getUniqueValues(arr) {
     var obj = {};
-    for(let i = 0; i < this.length; i++) {
-      if(!Object.Keys(obj).includes(this[i][column])) {
-        obj[this[i][column]] = true;
+    for(let i = 0; i < arr.length; i++) {
+      if(!Object.keys(obj).includes(arr[i][column])) {
+        obj[arr[i][column]] = true;
       }
     }
+    return obj;
   }
-  let expansions = columnRange.values.unique();
+  let expansions = await getUniqueValues(columnRange.values);
 
   logui(`Blocksheet check yielded ${expansions.length}`)
   return expansions;
