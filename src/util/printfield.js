@@ -205,7 +205,8 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   }
 
   var columnRange = currentWorksheet.names.getItemOrNullObject(name);
-  if(!ownerset || !columnRange) {
+  logui(`Got ${columnRange.toString()} from sheet names lookup`);
+  if(columnRange.isNullObject || !ownerset) {
     logui(`Selecting used range`);
     columnRange = currentWorksheet.getUsedRange();
   } else {
@@ -225,8 +226,9 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
     }
     return obj;
   }
+  logui('Checking for unique values in expansion column')
   let expansions = await getUniqueValues(columnRange.values);
-
+  
   logui(`Blocksheet check yielded ${expansions}`)
   return expansions;
 }
