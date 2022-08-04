@@ -266,8 +266,10 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
     return 0;
   };
   logui('Sorting setups complete')
-
+  range.load('values');
+  await context.sync();
   let sheetValues = range.values;
+
   // add expansion sort
   logui('Sorting sheet values');
   sheetValues.sort(threeSort);
