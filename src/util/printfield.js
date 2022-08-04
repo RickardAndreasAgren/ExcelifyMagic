@@ -1,6 +1,6 @@
 import { numberToLetters, lettersToNumber } from './columnconverter.js';
 import { logui } from '../util/printui.js';
-import { prepareSet, getSortPriorities } from '../taskpane/taskpane.js';
+import { prepareSet, getSortPriorities, buildSet } from '../taskpane/taskpane.js';
 import { getSetData } from '../api/excelifyapi.js';
 
 export async function printfield(twoDimArray,newSheet) {
@@ -120,9 +120,6 @@ export async function printfield(twoDimArray,newSheet) {
         'values',
       ]);
 
-      rangeString = `=OFFSET(${name}!$A$1,0,0,COUNTA(${name}!$A:$A),${xTarget})`;
-      logui(rangeString);
-      currentWorksheet.names.add(name,rangeString,"");
       await context.sync();
       logui(`${range.values}`);
       logui(`${typeof twoDimArray}`);
