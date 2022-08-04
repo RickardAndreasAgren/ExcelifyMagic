@@ -205,7 +205,7 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   }
 
   var columnRange = currentWorksheet.names.getItemOrNullObject(name);
-  if(!ownerset) {
+  if(!ownerset || !columnRange) {
     logui(`Selecting used range`);
     columnRange = currentWorksheet.getUsedRange();
   } else {
