@@ -357,14 +357,10 @@ export async function getSortPriorities() {
 }
 
 export function getSetCode(name) {
-  let setlist = document.getElementById('setselector');
+  let setlistHtml = document.getElementById('setselector');
 
-  let index = setlist.findIndex(element => {
-    if(element.text == name) {
-      return element;
-    };
-  });
-  return setlist[index].value;
+  let setCode = Array.from(setlistHtml).find(element => element.value == name)
+  return setCode;
 }
 
 async function getSelectedPropsHTML() {
