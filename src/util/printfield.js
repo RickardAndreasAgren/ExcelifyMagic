@@ -189,22 +189,34 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
     await context.sync();
     logui(`${cell.values[0]}`)
     if(cell.values[0][0] == 'Expansion') {
-      column = numberToLetters(isLooking);
-      islooking = 0;
+      column = await numberToLetters(isLooking);
+      break;
     }
     isLooking++
   }
-  let rangeString = `=OFFSET(${name}!$${column}$1,0,0,COUNTA(${name}!$${column}:$${column}),1)`;
-  logui(rangeString);
-  currentWorksheet.names.add(name,rangeString,"");
-  await context.sync();
+  var columnRange = null;
+  if(ownerset) {
+    if(currentWorksheet.names.getItem(name) != null) {
+      columnRange = currentWorksheet.names.getItem(name);
+    }
+  }
+  if(columnRange === null) {
+    columnRange = currentWorksheet.getUsedRange()
+  }
   logui(`Selecting ${name}`);
-  var columnRange = currentWorksheet.names.getItem(name);
   columnRange.load('values');
   await context.sync();
-  let expansions = {};
-  columnRange.values.forEach(rowWithColumn => expansions[rowWithColumn[0]] = true);
-  //
+
+  Array.prototype.unique = function() {
+    var obj = {};
+    for(let i = 0; i < this.length; i++) {
+      if(!obj.keys.includes(this[i][column])) {
+        obj[this[i][column]] = true;
+      }
+    }
+  }
+  let expansions = columnRange.values.unique();
+
   logui(`Blocksheet check yielded ${expansions.length}`)
   return expansions;
 }
