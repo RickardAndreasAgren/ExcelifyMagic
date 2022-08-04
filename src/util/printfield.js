@@ -83,7 +83,7 @@ export async function printfield(twoDimArray, newSheet, format) {
               return prepareSet(data);
             })
             logui(`Extending data array with ${extraSet.length} rows`);
-            twoDimArray.concat(extraSet);
+            twoDimArray = twoDimArray.concat(extraSet);
             logui(`Now at ${twoDimArray.length} rows.`)
           }
           // link up all sets
