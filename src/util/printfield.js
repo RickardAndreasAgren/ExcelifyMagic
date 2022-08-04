@@ -183,6 +183,7 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   let isLooking = 0;
   while(10 > isLooking && isLooking >= 0) {
     logui(`Checking headers`);
+    // kollade rader istället för kolumn?
     let cell = currentWorksheet.getCell(0,isLooking);
     cell.load('values');
     await context.sync();
