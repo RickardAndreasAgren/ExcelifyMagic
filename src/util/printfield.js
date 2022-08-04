@@ -127,6 +127,7 @@ export async function printfield(twoDimArray, newSheet, format) {
       range = currentWorksheet.getRange(rangeString);
       range.load([
         'values',
+        'columnCount'
       ]);
 
       await context.sync();
@@ -232,6 +233,7 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
 
 async function saveCounts(context, range, twoDimArray, arraySizeX) {
   // get sort priority, (always starts with expansion)
+  let headers = twoDimArray.shift();
   let sorters = await getSortPriorities();
   let pSort = sorters.pst ? sorters.pst : false;
   let sSort = sorters.sst ? sorters.sst : false;
@@ -268,7 +270,7 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
   // add expansion sort
   sheetValues.sort(threeSort);
   twoDimArray.sort(threeSort);
-  let sheetCountColumn = arraySizeX < 2 ? sheetValues[index].length - 1 : arraySizeX
+  let sheetCountColumn = arraySizeX < 2 ? sheetValues[0].length - 1 : arraySizeX
   twoDimArray.forEach((element,index) => {
     twoDimArray[index][element.length-1] = sheetValues[index][sheetCountColumn]
   })
