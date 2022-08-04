@@ -112,6 +112,7 @@ export async function printfield(twoDimArray, newSheet, format) {
           'rowCount',
         ]);
         await context.sync();
+        logui('Saving counts');
         twoDimArray = await saveCounts(context, range, twoDimArray, xTarget);
         await clearRange(context,range);
         await context.sync();
@@ -122,6 +123,7 @@ export async function printfield(twoDimArray, newSheet, format) {
         printNewRange
         save
       */
+      logui('Using rangestring');
       range = currentWorksheet.getRange(rangeString);
       range.load([
         'values',
@@ -263,15 +265,20 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
     }
     return 0;
   };
+  logui('Sorting setups complete')
 
   let sheetValues = range.values;
   // add expansion sort
+  logui('Sorting sheet values');
   sheetValues.sort(threeSort);
+  logui('Sorting value array');
   twoDimArray.sort(threeSort);
-  let sheetCountColumn = arraySizeX < 2 ? sheetValues[0].length - 1 : arraySizeX
+  let sheetCountColumn = sheetValues[0].length - 1
+  logui('Saving count values');
   twoDimArray.forEach((element,index) => {
     twoDimArray[index][element.length-1] = sheetValues[index][sheetCountColumn]
   })
+  logui('Restoring header to array');
   twoDimArray.splice(0,0,headers);
 
   return twoDimArray
