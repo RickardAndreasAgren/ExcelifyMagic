@@ -17,11 +17,10 @@ export async function printfield(twoDimArray, newSheet, format) {
       var currentWorkbook = context.workbook;
       var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
 
-      var inUseRange = currentWorksheet.getUsedRange();
-      inUseRange.load('columnCount','address');
-      await context.sync();
-      let rangeX = inUseRange.columnCount;
       var range = currentWorksheet.getUsedRange();
+      range.load('columnCount','address');
+      await context.sync();
+      let rangeX = range.columnCount;
       var rangeString = '';
 
       var selectedRange = context.workbook.getSelectedRange();
@@ -105,7 +104,6 @@ export async function printfield(twoDimArray, newSheet, format) {
           rangeString = 'A1:' + xTarget + yTarget;
         }
         logui(rangeString);
-        range = currentWorksheet.getRange(rangeString);
         range.load([
           'values',
           'columnIndex',
@@ -137,7 +135,7 @@ export async function printfield(twoDimArray, newSheet, format) {
       logui('Assigning values to sheet range');
       range.values = twoDimArray;
       await context.sync();
-      logui('saving new OFFSET range')
+      logui('saving new OFFSET range');
       await saveRange(currentWorkbook,currentWorksheet.name,range.columnCount);
       await context.sync();
       return 0;
