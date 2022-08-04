@@ -205,6 +205,7 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   }
 
   var columnRange = currentWorksheet.names.getItemOrNullObject(name);
+  await context.sync();
   logui(`Got ${columnRange.toString()} from sheet names lookup`);
   if(columnRange.isNullObject || !ownerset) {
     logui(`Selecting used range`);
@@ -228,7 +229,7 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   }
   logui('Checking for unique values in expansion column')
   let expansions = await getUniqueValues(columnRange.values);
-  
+
   logui(`Blocksheet check yielded ${expansions}`)
   return expansions;
 }
