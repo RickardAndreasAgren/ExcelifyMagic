@@ -231,7 +231,7 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
 
 async function saveCounts(context, range, twoDimArray, arraySizeX) {
   // get sort priority, (always starts with expansion)
-  let sorters = await getSortPriorities(proplist);
+  let sorters = await getSortPriorities();
   let pSort = sorters.pst ? sorters.pst : false;
   let sSort = sorters.sst ? sorters.sst : false;
   let countIndex = twoDimArray[0].length-1;
