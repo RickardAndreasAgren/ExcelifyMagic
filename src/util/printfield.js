@@ -180,20 +180,24 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   }
   name = currentWorksheet.name;
   let column = false;
-  let isLooking = 1;
-  while(10 > isLooking > 1) {
-    let cell = currentWorksheet.getCell(1,numberToLetters(isLooking));
+  let isLooking = 0;
+  while(10 > isLooking && isLooking >= 0) {
+    logui(`Checking headers`);
+    let cell = currentWorksheet.getCell(0,isLooking);
     cell.load('values');
     await context.sync();
+    logui(`${cell.values[0]}`)
     if(cell.values[0][0] == 'Expansion') {
       column = numberToLetters(isLooking);
       islooking = 0;
     }
+    isLooking++
   }
   let rangeString = `=OFFSET(${name}!$${column}$1,0,0,COUNTA(${name}!$${column}:$${column}),1)`;
   logui(rangeString);
   currentWorksheet.names.add(name,rangeString,"");
   await context.sync();
+  logui(`Selecting ${name}`);
   var columnRange = currentWorksheet.names.getItem(name);
   columnRange.load('values');
   await context.sync();
