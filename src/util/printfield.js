@@ -68,6 +68,7 @@ export async function printfield(twoDimArray, newSheet, format) {
               if(checkSheets) {
                 name = checkSheets;
                 checkSheets.activate();
+                currentWorksheet = checkSheets;
               }
               // get other sets
               let setCode = getSetCode(key);
@@ -94,6 +95,7 @@ export async function printfield(twoDimArray, newSheet, format) {
           xTarget = await numberToLetters(arraySizeX - 1);
 
           rangeString = 'A1:' + xTarget + yTarget;
+          logui('A')
           range = currentWorksheet.getRange(rangeString);
           logui(rangeString);
           // =======================================================
@@ -103,8 +105,9 @@ export async function printfield(twoDimArray, newSheet, format) {
         } else {
           logui('Fallback to basic selection');
           rangeString = 'A1:' + xTarget + yTarget;
+          range = currentWorksheet.getRange(rangeString);
         }
-        await context.sync();
+        logui('B')
         logui(rangeString);
         range.load([
           'values',
@@ -113,10 +116,11 @@ export async function printfield(twoDimArray, newSheet, format) {
           'columnCount',
           'rowCount',
         ]);
-        await context.sync();
         logui('Saving counts');
         twoDimArray = await saveCounts(context, range, twoDimArray, xTarget);
+        logui('C')
         await clearRange(context,range);
+        logui('F')
         await context.sync();
       }
 
