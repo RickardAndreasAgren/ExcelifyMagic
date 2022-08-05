@@ -71,6 +71,7 @@ export async function printfield(twoDimArray, newSheet, format) {
               }
               // get other sets
               let setCode = getSetCode(key);
+              logui(`By code ${setCode}`);
               let extraSet = await buildSet(setCode)
               .then(async data => {
                 let setData = getSetData(data.set, format);
@@ -103,6 +104,7 @@ export async function printfield(twoDimArray, newSheet, format) {
           logui('Fallback to basic selection');
           rangeString = 'A1:' + xTarget + yTarget;
         }
+        await context.sync();
         logui(rangeString);
         range.load([
           'values',
