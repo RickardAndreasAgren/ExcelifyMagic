@@ -359,11 +359,13 @@ export async function getSortPriorities() {
 
 export function getSetCode(name) {
   let setlistHtml = document.getElementById('setselector').options;
+  let setCode = "";
+  for(let i = 0; i < setlistHtml.length; i++) {
+    if(setlistHtml.text == name) {
+      setCode = setlistHtml[i].value;
+    }
+  }
 
-  let setCode = setlistHtml.find(element => {
-    logui(`${JSON.stringify(element)}`);
-    element.value == name
-  })
   logui(`Divulged ${setCode}`);
   return setCode;
 }
