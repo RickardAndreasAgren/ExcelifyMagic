@@ -62,11 +62,16 @@ export async function printfield(twoDimArray, newSheet, format) {
           const saveName = name;
           for (const [key, value] of Object.entries(blocks)) {
             if(key != saveName) {
-              logui(`Preparing ${key}`)
+              logui(`Preparing ${key}`);
+              const regex = /(\s)/i;
+              let safeKey = key.replace(regex,"_");
               // check against sheet name, set name when found
-              let checkSheets = context.workbook.worksheets.getItem(key);
-              if(checkSheets) {
-                name = checkSheets;
+              logui(`Transformed key to ${safeKey}`);
+              let checkSheets = context.workbook.worksheets.getItemOrNullObject(safeKey);
+              await context.sync();
+              if(checkSheets && !checkSheets.isNullObject) {
+                logui('Activating sheet')
+                name = checkSheets.name;
                 checkSheets.activate();
                 currentWorksheet = checkSheets;
               }
