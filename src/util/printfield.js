@@ -147,6 +147,7 @@ export async function printfield(twoDimArray, newSheet, format) {
       logui(`${twoDimArray[0]}`);
       logui('Assigning values to sheet range');
       range.values = twoDimArray;
+      currentWorksheet.load('name');
       await context.sync();
       logui('saving new OFFSET range');
       await saveRange(currentWorkbook,currentWorksheet.name,range.columnCount);
@@ -249,15 +250,22 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
   // get sort priority, (always starts with expansion)
   let headers = twoDimArray.shift();
   let sorters = await getSortPriorities();
+  // TODO use getSortPriorities on range.values[0] (headers)
+
   let pSort = sorters.pst ? sorters.pst : false;
   let sSort = sorters.sst ? sorters.sst : false;
-  let countIndex = twoDimArray[0].length-1;
+  let countIndexArray = twoDimArray[0].length-1;
+  let expansionIndexArray = countIndex-1;
+  let countIndexRange = range.columnCount-1;
+  let expansionIndexRange = countIndexRange-1;
+  let countIndex = null;
+  let expansionIndex = null;
 
   const threeSort = (a, b) => {
-    if (a[countIndex] < b[countIndex]) {
+    if (a[expansionIndex] < b[expansionIndex]) {
       return -1;
     }
-    if (a[countIndex] > b[countIndex]) {
+    if (a[expansionIndex] > b[expansionIndex]) {
       return 1;
     }
 
@@ -286,8 +294,13 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
 
   // add expansion sort
   logui('Sorting sheet values');
+
+  let countIndex = countIndexRange;
+  let expansionIndex = expansionIndexRange;
   sheetValues.sort(threeSort);
   logui('Sorting value array');
+  let countIndex = countIndexArray;
+  let expansionIndex = expansionIndexArray;
   twoDimArray.sort(threeSort);
   let sheetCountColumn = sheetValues[0].length - 1
   logui('Saving count values');
