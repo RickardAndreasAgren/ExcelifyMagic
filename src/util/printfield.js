@@ -93,6 +93,7 @@ export async function printfield(twoDimArray, newSheet, format) {
           xTarget = await numberToLetters(arraySizeX - 1);
 
           rangeString = 'A1:' + xTarget + yTarget;
+          range = currentWorksheet.getRange(rangeString);
           logui(rangeString);
           // =======================================================
           /*else
