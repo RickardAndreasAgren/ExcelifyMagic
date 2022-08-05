@@ -361,7 +361,8 @@ export function getSetCode(name) {
   let setlistHtml = document.getElementById('setselector').options;
   let setCode = "";
   for(let i = 0; i < setlistHtml.length; i++) {
-    if(setlistHtml.text == name) {
+    logui(`${setlistHtml[0]}`);
+    if(setlistHtml[i].text == name) {
       setCode = setlistHtml[i].value;
     }
   }
