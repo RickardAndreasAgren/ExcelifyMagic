@@ -1,13 +1,42 @@
 import pioneer from '../data/pioneercards.json';
-//Import allcards from '../data/allsets.json';
 let allcards = {};
 import Sortkeeper from './sortkeeper.js';
 import { logui } from '../util/printui.js';
+import pioneerFromAll from './pioneerFromAll.js'
+var allsets = null;
 
 const preType = ['Legendary','Artifact', 'Enchantment'];
 
 var primaryKeeper;
 var secondaryKeeper;
+
+export async function loadAll() {
+  return import('../data/allsets.json')
+  .then((allsetData) => {
+    return allsetData;
+  })
+  .catch(error => {
+    console.log(error);
+    logui(error);
+  });
+}
+
+export async function loadPioneerMeta() {
+  return import('../data/pioneermeta.json')
+  .then((pioneerMeta) => {
+    return pioneerMeta;
+  })
+  .catch(error => {
+    console.log(error);
+    logui(error);
+  });
+}
+
+export async function validatePioneerJson() {
+  // open pioneermeta
+  // check pioneercards.json sets according to pioneermeta
+  return true;
+}
 
 export async function initKeepers() {
   primaryKeeper = new Sortkeeper('primarysort', 'psortactive');
@@ -17,10 +46,13 @@ export async function initKeepers() {
 }
 
 export function getSetData(set, format) {
-  if (format == 'pioneer') {
+  const pioneerValidated = await validatePioneerJson();
+  if (format == 'pioneer' && pioneerValidated) {
     return pioneer.data[set];
   } else if (format == 'all') {
     return allcards.data[set];
+  } else if (format == 'pioneer' && !pioneerValidated) {
+    return pioneerFromAll();
   }
 }
 

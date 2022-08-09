@@ -18,6 +18,16 @@ const configs = {
     DATA_FILE: path.join(__dirname, 'src/data/pioneercards.json'),
     ETAG_FILE: path.join(__dirname, 'src/data/pioneercards.etag'),
   },
+  setmeta: {
+    URL: 'https://mtgjson.com/api/v5/SetList.json',
+    DATA_FILE: path.join(__dirname, 'src/data/setmeta.json'),
+    ETAG_FILE: path.join(__dirname, 'src/data/setmeta.etag'),
+  },
+  pioneermeta: {
+    URL: 'No',
+    DATA_FILE: path.join(__dirname, 'src/data/pioneermeta.json'),
+    ETAG_FILE: 'No',
+  }
 };
 
 function mtgjson(useConfig, callback) {
@@ -31,7 +41,7 @@ function mtgjson(useConfig, callback) {
 		if(error.code !== "ENOENT") {
 			throw "Unsupported error"
 		} else {
-			return false
+			return ""
 		}
 	})
 	.then(data => {
@@ -104,6 +114,32 @@ function mtgjson(useConfig, callback) {
     });
 }
 
+function validatePioneer() {
+  console.log('Not implemented');
+  return false;
+}
+
+function validateStandard() {
+  console.log('Not implemented');
+  return false;
+}
+
+function writePioneerMeta(allsets,allcards) {
+  const config = configs.pioneermeta;
+  //  October 5, 2012
+  const pioneerTime = Date.parse('01 Oct 2012 00:00:00 UTC');
+  // type == 'expansion' || type == 'core'
+  var pioneer = {data: {}};
+
+  // get only pioneer sets
+  allsets.data.filter(element => {
+    const setTime = Date.parse(element.releaseDate);
+    if(setTime > pioneerTime) {
+
+    }
+  });
+}
+
 async function go() {
   if (callArgs[0] == '-1' || callArgs[0] == 'pioneer' || callArgs.length < 1) {
     mtgjson(configs.pioneer).then(cards => {
@@ -115,7 +151,42 @@ async function go() {
       console.log(!!cards);
       console.log('Done');
     });
+  } else if (callArgs[0] == '-10' || callArgs[0] == 'validate') {
+    let whut = callArgs[1];
+    if(whut) {
+      if(whut == 'pioneer') {
+        validatePioneer();
+      } else if(whut == 'standard') {
+        validateStandard();
+      } else {
+        throw new Error("Invalid syntax");
+      }
+    }
+  } else if(callArgs[0] == '-4' || callArgs[0] == 'pioneerMeta') {
+    mtgjson(configs.all).then(cards => {
+      console.log(!!cards);
+      console.log('Done getting all');
+
+      mtgjson(configs.setmeta).then(sets => {
+        console.log(!!sets);
+        console.log('Done getting setlist');
+        writePioneerMeta(sets,cards);
+        console.log('Done writing pioneer meta');
+      });
+    });
+
   }
 }
 
-go();
+try {
+  go();
+} catch (e) {
+  console.log(e.message);
+} finally {
+  console.log('Arguments are: ');
+  console.log('-1 | Pioneer');
+  console.log('-2 | all');
+  console.log('-4 | pioneerMeta');
+  console.log('-10 | validate');
+  console.log('With added: standard | Pioneer');
+}
