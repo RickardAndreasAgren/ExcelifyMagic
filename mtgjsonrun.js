@@ -30,12 +30,6 @@ const configs = {
   }
 };
 
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
 function mtgjson(useConfig, callback) {
   return new Promise((resolve, reject) => {
     const URL = useConfig['URL'];
@@ -50,7 +44,7 @@ function mtgjson(useConfig, callback) {
 			return ""
 		}
 	})
-	.then(data => {
+	.then(async data => {
       if (data.err) {
         return { err: err };
       }
@@ -61,21 +55,15 @@ function mtgjson(useConfig, callback) {
       if (localEtag) {
         options.headers = { 'if-none-match': localEtag };
       }
-      // REBUILD THIS FUCKING THING
-      let {res, err} = req(URL, options, function(err, res) {
-        console.log(`Request sent to ${URL}, got response `);
-        console.log(!!res);
-        console.log('Error is');
-        console.log(err ? err : 'nothing');
-        console.log('SCode');
-        console.log(res.statusCode);
-        return {res: res ? res : !!res,err: err};
-      });
-      while(!res && !err) {
-        sleep(500);
+
+      let res = await wrappedReq(URL, options);
+      console.log('Do I wait?');
+      // NO YOU DONT, REMAKE THIS SHIT
+      if(res.error) {
+        reject(res.error);
       }
 
-      var noInternetConnection = !!err;
+      var noInternetConnection = !!res.error;
       if (noInternetConnection || res.statusCode === 304) {
         console.log('No connection');
         updateFile = fs.readFile(DATA_FILE,'utf-8')
@@ -143,6 +131,19 @@ function mtgjson(useConfig, callback) {
       console.log('BAD STUFF');
       console.log(error);
     });
+}
+
+async function wrappedReq(url, options) {
+  return await req(url, options, function(err, res) {
+    console.log(`Request sent to ${url}, got response `);
+    console.log(!!res);
+    console.log('Error is');
+    console.log(err ? err : 'nothing');
+    console.log('SCode');
+    console.log(res.statusCode);
+    const result = err ? {error: err} : res;
+    return result;
+  });
 }
 
 function validatePioneer() {
