@@ -35,114 +35,131 @@ function mtgjson(useConfig, callback) {
     const URL = useConfig['URL'];
     const DATA_FILE = useConfig['DATA_FILE'];
     const ETAG_FILE = useConfig['ETAG_FILE'];
-    return fs.readFile(ETAG_FILE)
-	     .catch(error => {
-		console.log(error)
-		if(error.code !== "ENOENT") {
-			throw "Unsupported error"
-		} else {
-			return ""
-		}
-	})
-	.then(async data => {
-      if (data.err) {
-        return { err: err };
-      }
-      let updateFile = true;
-      var localEtag = data ? data.toString() : "";
+    fs.readFile(ETAG_FILE)
+	      .catch(error => {
+    		console.log(error)
+    		if(error.code !== "ENOENT") {
+    			throw "Unsupported error"
+    		} else {
+    			return ""
+    		}
+    	 })
+    	 .then(async data => {
+          if (data.err) {
+            return { err: err };
+          }
+          let updateFile = true;
+          var localEtag = data ? data.toString() : "";
 
-      var options = {};
-      if (localEtag) {
-        options.headers = { 'if-none-match': localEtag };
-      }
-
-      let res = await wrappedReq(URL, options);
-      console.log('Do I wait?');
-      // NO YOU DONT, REMAKE THIS SHIT
-      if(res.error) {
-        reject(res.error);
-      }
-
-      var noInternetConnection = !!res.error;
-      if (noInternetConnection || res.statusCode === 304) {
-        console.log('No connection');
-        updateFile = fs.readFile(DATA_FILE,'utf-8')
-          .then(data => {
-            console.log(`Data type is ${typeof data} with length ${data.length ? data.length : '<Not applicable>'}`);
-            if (data && data.err) {
-              console.log('Error reads:');
-              console.log(data.err);
-              reject(data.err);
-            }
-            if(data) {
-              console.log('Readfile success');
-              if(data.data) {
-                console.log('Is good');
-              }
-              data.forEach(el => {
-                console.log(el.name);
-              });
-              return false;
-            } else {
-              return data;
-            }
-          })
-          .catch(error => {
-            console.log('EEEK1');
-            console.log(error.reason);
-            console.log(error);
-          });
-      }
-
-      if(!updateFile) {
-        return 0;
-      }
-      console.log(`Updating ${DATA_FILE}`)
-      fs.writeFile(DATA_FILE, res.body)
-        .then(data => {
-          if (data && data.err) {
-            reject(data.err);
+          var options = {};
+          if (localEtag) {
+            options.headers = { 'if-none-match': localEtag };
           }
 
-          fs.writeFile(ETAG_FILE, res.headers.etag)
-            .then(data => {
-              if (data && data.err) {
-                reject(data.err);
-              }
-
-              resolve(JSON.parse(res.body));
-            })
-            .catch(error => {
-              console.log('EEEK2');
-              console.log(error);
-            });
-        })
-        .catch(error => {
-          console.log('EEEK3');
-          console.log(error);
+          console.log(`Getting ${URL}`);
+          let resultData = await wrappedReq(URL, options, handleData, {URL: URL, DATA_FILE: DATA_FILE, ETAG_FILE: ETAG_FILE});
+          if(resultData.error) {
+            console.log(`Call to ${URL} complete, with error ${resultData.error}`)
+            return reject(resultData.error);
+          } else {
+            console.log(`Call to ${URL} complete`)
+            return resolve(resultData);
+          }
         });
-    });
-  })
-    .then(data => {
-      console.log('Delivery to promise');
-      return data;
-    })
-    .catch(error => {
-      console.log('BAD STUFF');
-      console.log(error);
-    });
+  });
 }
 
-async function wrappedReq(url, options) {
-  return await req(url, options, function(err, res) {
-    console.log(`Request sent to ${url}, got response `);
-    console.log(!!res);
-    console.log('Error is');
-    console.log(err ? err : 'nothing');
-    console.log('SCode');
-    console.log(res.statusCode);
-    const result = err ? {error: err} : res;
-    return result;
+async function handleData(res, callbackData) {
+  const URL = callbackData['URL'];
+  const DATA_FILE = callbackData['DATA_FILE'];
+  const ETAG_FILE = callbackData['ETAG_FILE'];
+  var noInternetConnection = !!res.error;
+  if(res && res.body) {
+    res.body = JSON.stringify(res.body)
+  }
+  if (noInternetConnection || res.statusCode === 304) {
+    console.log('No connection');
+    console.log(`Reading ${DATA_FILE}`);
+    await fs.readFile(DATA_FILE)
+      .then(data => {
+        let jsonData;
+        try {
+          jsonData = JSON.parse(data);
+        } catch (e) {
+          console.log('JSON parse failed');
+          console.log(e);
+        }
+        console.log(`Data type is ${typeof jsonData} with length ${jsonData.length ? jsonData.length : '<Not applicable>'}`);
+        if (jsonData && jsonData.err) {
+          console.log('Error reads:');
+          console.log(jsonData.err);
+          return {error: jsonData.err};
+        }
+        if(jsonData) {
+          console.log('Readfile success');
+          if(jsonData.data) {
+            console.log('Is good');
+          }
+          /* data.forEach(el => {
+            console.log(el.name);
+          });*/
+          return JSON.parse(jsonData);
+        } else {
+          return 1;
+        }
+      })
+      .catch(error => {
+        console.log('EEEK1');
+        console.log(error.reason);
+        console.log(error);
+        return {error: error};
+      });
+  } else {
+    console.log(`Updating ${DATA_FILE}`)
+    let completion = await fs.writeFile(DATA_FILE, res.body)
+      .then(data => {
+        if (data && data.err) {
+          return {error: data.err};
+        }
+
+        return fs.writeFile(ETAG_FILE, res.headers.etag)
+          .then(data => {
+            if (data && data.err) {
+              return {error: data.err};
+            }
+
+            return JSON.parse(res.body);
+          })
+          .catch(error => {
+            console.log('EEEK2');
+            console.log(error);
+            return {error: error};
+          });
+      })
+      .catch(error => {
+        console.log('EEEK3');
+        console.log(error);
+        return {error: error};
+      });
+      return JSON.parse(completion);
+  }
+};
+
+async function wrappedReq(url, options, callback, callbackData) {
+  return new Promise((resolve, reject) => {
+    req(url, options, async function(err, res) {
+      console.log(`Request sent to ${url}, got response `);
+      console.log(!!res);
+      console.log(`Error is ${err ? err : 'nothing'}`);
+      console.log(`SCode: ${res.statusCode}`);
+      const result = err ? {error: err} : res;
+      if(result.error) {
+        reject(result);
+      }
+      const data = await callback(result, callbackData);
+      console.log(`callback result: ${!!callbackData}`);
+      resolve(data);
+    });
   });
 }
 
@@ -231,5 +248,5 @@ try {
   console.log('-2 | all');
   console.log('-4 | pioneerMeta');
   console.log('-10 | validate');
-  console.log('With added: standard | Pioneer');
+  console.log('With added: standard | pioneer');
 }
