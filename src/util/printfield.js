@@ -295,12 +295,12 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
   // add expansion sort
   logui('Sorting sheet values');
 
-  let countIndex = countIndexRange;
-  let expansionIndex = expansionIndexRange;
+  countIndex = countIndexRange;
+  expansionIndex = expansionIndexRange;
   sheetValues.sort(threeSort);
   logui('Sorting value array');
-  let countIndex = countIndexArray;
-  let expansionIndex = expansionIndexArray;
+  countIndex = countIndexArray;
+  expansionIndex = expansionIndexArray;
   twoDimArray.sort(threeSort);
   let sheetCountColumn = sheetValues[0].length - 1
   logui('Saving count values');

@@ -1,7 +1,7 @@
 
-import {loadAll, loadPioneerMeta} from './exelifyapi.js';
+import {loadAll, loadPioneerMeta} from './excelifyapi.js';
 
-export function pioneerFromAll() {
+export default function pioneerFromAll() {
   const allSets = loadAll();
   const pMeta = loadPioneerMeta();
 

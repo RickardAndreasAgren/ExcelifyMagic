@@ -11,36 +11,34 @@ var primaryKeeper;
 var secondaryKeeper;
 
 export async function loadAll() {
-  return import('../data/allsets.json')
-  .then((allsetData) => {
-    return allsetData;
-  })
-  .catch(error => {
-    console.log(error);
-    logui(error);
-  });
+  try {
+    const loaded = await import('../data/allsets.json')
+      .then(({default: allsets}) => {return allsets});
+    return loaded;
+  } catch (e) {
+    logui(e.message);
+    throw new Error('Import failed');
+  }
 }
 
 export async function loadPioneerMeta() {
-  return import('../data/pioneermeta.json')
-  .then((pioneerMeta) => {
-    return pioneerMeta;
-  })
-  .catch(error => {
-    console.log(error);
-    logui(error);
-  });
+  try {
+    const loaded = await require('../data/pioneermeta.json');
+    return loaded;
+  } catch (e) {
+    logui(e.message);
+    throw new Error('Import failed');
+  }
 }
 
 export async function loadPioneer() {
-  return import('../data/pioneer.json')
-  .then((pioneerMeta) => {
-    return pioneerMeta;
-  })
-  .catch(error => {
-    console.log(error);
-    logui(error);
-  });
+  try {
+    const loaded = await require('../data/pioneercards.json');
+    return loaded;
+  } catch (e) {
+    logui(e.message);
+    throw new Error('Import failed');
+  }
 }
 
 export async function checkPioneerJson() {
@@ -64,7 +62,6 @@ export async function checkPioneerJson() {
       });
       if(!hit) {
         miss = element.code;
-        break;
       }
     });
     if(miss) {
