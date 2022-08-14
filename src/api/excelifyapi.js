@@ -1,9 +1,9 @@
-import pioneer from '../data/pioneercards.json';
 let allcards = {};
 import Sortkeeper from './sortkeeper.js';
 import { logui } from '../util/printui.js';
 import pioneerFromAll from './pioneerFromAll.js'
 var allsets = null;
+var pioneer = null;
 
 const preType = ['Legendary','Artifact', 'Enchantment'];
 
@@ -32,10 +32,47 @@ export async function loadPioneerMeta() {
   });
 }
 
-export async function validatePioneerJson() {
-  // open pioneermeta
-  // check pioneercards.json sets according to pioneermeta
-  return true;
+export async function loadPioneer() {
+  return import('../data/pioneer.json')
+  .then((pioneerMeta) => {
+    return pioneerMeta;
+  })
+  .catch(error => {
+    console.log(error);
+    logui(error);
+  });
+}
+
+export async function checkPioneerJson() {
+  let pioneerCards, pioneerMeta;
+  // sync issues risk?
+  try {
+    pioneerCards = await loadPioneer();
+    pioneerMeta = await loadPioneerMeta();
+  } catch (e) {
+    console.log('No pioneer data available');
+  }
+
+  if(!!pioneerMeta.data || !!pioneerCards.data) {
+    throw new Error('No meta data.');
+  }
+  return new Promise((resolve) => {
+    let miss = false;
+    Object.keys(pioneerCards.data).forEach(element => {
+      let hit = pioneerMeta.data.find(metaset => {
+        return metaset.code == element.code
+      });
+      if(!hit) {
+        miss = element.code;
+        break;
+      }
+    });
+    if(miss) {
+      resolve({error: {message: `${miss} is missing`}});
+    } else {
+      resolve(pioneerCards);
+    }
+  });
 }
 
 export async function initKeepers() {
@@ -46,13 +83,10 @@ export async function initKeepers() {
 }
 
 export function getSetData(set, format) {
-  const pioneerValidated = await validatePioneerJson();
-  if (format == 'pioneer' && pioneerValidated) {
+  if (format == 'pioneer') {
     return pioneer.data[set];
   } else if (format == 'all') {
     return allcards.data[set];
-  } else if (format == 'pioneer' && !pioneerValidated) {
-    return pioneerFromAll();
   }
 }
 
@@ -95,6 +129,14 @@ export function getSetName(set, format) {
 
 export async function setOptions(format) {
   var pObject = {};
+  const pioneerValidated = await checkPioneerJson();
+
+  if(pioneerValidated['error']) {
+    pioneer = await pioneerFromAll();
+  } else {
+    pioneer = pioneerValidated;
+  }
+
   if (format == 'pioneer') {
     pObject = pioneer.data;
   } else if (format == 'all') {

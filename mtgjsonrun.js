@@ -80,7 +80,7 @@ async function handleData(res, callbackData) {
   if (noInternetConnection || res.statusCode === 304) {
     console.log('No connection');
     console.log(`Reading ${DATA_FILE}`);
-    await fs.readFile(DATA_FILE)
+    return await fs.readFile(DATA_FILE)
       .then(data => {
         let jsonData;
         try {
@@ -186,7 +186,7 @@ function writePioneerMeta(allsets,allcards) {
     const setTime = Date.parse(element.releaseDate);
     if(setTime > pioneerTime) {
       if(element.type == 'expansion' || element.type == 'core') {
-        pioneer[element.code] = element;
+        pioneer.data[element.code] = element;
       };
     };
   });
