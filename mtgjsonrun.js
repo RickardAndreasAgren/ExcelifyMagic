@@ -27,6 +27,11 @@ const configs = {
     URL: 'No',
     DATA_FILE: path.join(__dirname, 'src/data/pioneermeta.json'),
     ETAG_FILE: 'No',
+  },
+  pioneercustom: {
+    URL: 'No',
+    DATA_FILE: path.join(__dirname, 'src/data/pioneercustom.json'),
+    ETAG_FILE: 'No',
   }
 };
 
@@ -75,7 +80,9 @@ async function handleData(res, callbackData) {
   const ETAG_FILE = callbackData['ETAG_FILE'];
   var noInternetConnection = !!res.error;
   if(res && res.body) {
-    res.body = JSON.stringify(res.body)
+    if(typeof res.body === 'string') {
+      res.body = JSON.parse(res.body)
+    }
   }
   if (noInternetConnection || res.statusCode === 304) {
     console.log('No connection');
@@ -103,7 +110,7 @@ async function handleData(res, callbackData) {
           /* data.forEach(el => {
             console.log(el.name);
           });*/
-          return JSON.parse(jsonData);
+          return jsonData;
         } else {
           return 1;
         }
@@ -116,7 +123,7 @@ async function handleData(res, callbackData) {
       });
   } else {
     console.log(`Updating ${DATA_FILE}`)
-    let completion = await fs.writeFile(DATA_FILE, res.body)
+    let completion = await fs.writeFile(DATA_FILE, JSON.stringify(res.body))
       .then(data => {
         if (data && data.err) {
           return {error: data.err};
@@ -128,7 +135,7 @@ async function handleData(res, callbackData) {
               return {error: data.err};
             }
 
-            return JSON.parse(res.body);
+            return res.body;
           })
           .catch(error => {
             console.log('EEEK2');
@@ -141,7 +148,7 @@ async function handleData(res, callbackData) {
         console.log(error);
         return {error: error};
       });
-      return JSON.parse(completion);
+      return completion;
   }
 };
 
@@ -178,7 +185,7 @@ function writePioneerMeta(allsets,allcards) {
   //  October 5, 2012
   const pioneerTime = Date.parse('01 Oct 2012 00:00:00 UTC');
   // type == 'expansion' || type == 'core'
-  var pioneer = {data: {}};
+  var pioneerMeta = {data: {}};
 
   // get only pioneer sets
   console.log(typeof allsets);
@@ -186,9 +193,28 @@ function writePioneerMeta(allsets,allcards) {
     const setTime = Date.parse(element.releaseDate);
     if(setTime > pioneerTime) {
       if(element.type == 'expansion' || element.type == 'core') {
-        pioneer.data[element.code] = element;
+        pioneerMeta.data[element.code] = element;
       };
     };
+  });
+  let saveJson = JSON.stringify(pioneerMeta);
+  return new Promise((resolve,reject) => {
+    fs.writeFile(config['DATA_FILE'], saveJson)
+    .then(data => {
+      if (data && data.err) {
+        reject(data.err);
+      }
+      console.log(`Wrote ${config['DATA_FILE']}`);
+      resolve(pioneerMeta);
+    });
+  });
+}
+
+function writePioneerCustom(pioneermeta, allcards) {
+  const config = configs.pioneercustom;
+  var pioneer = {data: {}};
+  Object.keys(pioneermeta.data).forEach(set => {
+    pioneer.data[set] = allcards.data[set];
   });
   let saveJson = JSON.stringify(pioneer);
   return fs.writeFile(config['DATA_FILE'], saveJson)
@@ -196,8 +222,8 @@ function writePioneerMeta(allsets,allcards) {
       if (data && data.err) {
         reject(data.err);
       }
-      return true;
-    });
+      return pioneer;
+  });
 }
 
 async function go() {
@@ -230,8 +256,15 @@ async function go() {
       mtgjson(configs.setmeta).then(sets => {
         console.log(!!sets);
         console.log('Done getting setlist');
-        writePioneerMeta(sets,cards);
-        console.log('Done writing pioneer meta');
+        writePioneerMeta(sets,cards)
+        .then(pMeta => {
+          console.log('Done writing pioneer meta');
+          let mIs = !!pMeta ? "Meta in" : "Meta missing";
+          let cIs = !!cards ? "Cards in" : "Cards missing";
+          console.log(`${mIs} - ${cIs}`);
+          writePioneerCustom(pMeta,cards);
+          console.log('Done writing pioneer custom');
+        })
       });
     });
 

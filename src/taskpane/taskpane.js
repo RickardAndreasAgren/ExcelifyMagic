@@ -20,6 +20,8 @@ import {
   getWorkbooknames
 } from '../api/excelifyapi.js';
 
+var isReady = false;
+
 var checkBoxes = [];
 
 var sets = [];
@@ -63,90 +65,94 @@ can be targeted by .js from this scope.
 
 Office.onReady(info => {
   if (info.host === Office.HostType.Excel) {
-    document.getElementById('sideload-msg').style.display = 'none';
-    document.getElementById('app-body').style.display = 'flex';
-    document.getElementById('buildset').onclick = renderSetCards;
-    document.getElementById('formatselector').onclick = selectFormat;
-
-    sets = setOptions(format)
-      .then(setList => {
-        let options = setList.sort((a,b) => {
-          let aDate = new Date(a.releaseDate);
-          let bDate = new Date(b.releaseDate);
-          if (aDate > bDate) {
-            return 1;
-          }
-          if (aDate < bDate) {
-            return -1;
-          }
-          return 0;
-        });
-
-        for (let set = 0; set < options.length; set++) {
-          let newOption = document.createElement('option');
-          newOption.value = options[set].type;
-          newOption.text = options[set].name;
-          //logui(`Got ${options[set].name}`)
-          document.getElementById('setselector').add(newOption, null);
-          document.getElementById('setselector').onchange = function() {
-            setRows();
-          };
-        }
-        logui("Getting ranges");
-        getWorkbooknames()
-        .then(ranges => {
-          logui(ranges.length);
-          for (let rangeOptions = 0; rangeOptions < ranges.length; rangeOptions++) {
-            let newOption = document.createElement('option');
-            newOption.value = ranges[rangeOptions];
-            newOption.text = ranges[rangeOptions];
-            document.getElementById('rangeselector').add(newOption, null);
-          }
-          return 0;
-        });
-
-        document.getElementById('toberemoved').remove();
-        document.getElementById('selectionpoint').innerHTML = '';
-        setRows();
-        document.getElementById('newsheet').onchange = function() {
-          newSheet = document.getElementById('newsheet').checked;
-        };
-        initKeepers();
-        return options;
-      })
-      .then(options => {
-        for (var i = 0; i < checkBoxes.length; i++) {
-          let target = Object.assign({}, { name: checkBoxes[i] });
-          document.getElementById(target.name).onchange = function() {
-            selectedFields[target.name] = !selectedFields[target.name];
-            let selections = 2;
-            Object.keys(selectedFields).forEach(field => {
-              if (selectedFields[field]) {
-                selections += 1;
-              }
-            });
-            document.getElementById('printcolumns').innerHTML = selections;
-
-            try {
-              sortOptionsUpdate(target.name, !!selectedFields[target.name]);
-            } catch (error) {
-              document.getElementById('errorpoint').innerHTML = JSON.stringify({
-                err: error.message,
-                stack: error.stack,
-              });
-            }
-          };
-        }
-        logui("Addin ready");
-        return options;
-      })
-      .catch(error => {
-        document.getElementById('errorpoint').innerHTML =
-          'Shit happened: ' + error.message + ' Stack: ' + error.stack;
-      });
-
+    startApp();
+    return 0;
   }
 });
+
+function startApp() {
+  document.getElementById('sideload-msg').style.display = 'none';
+  document.getElementById('app-body').style.display = 'flex';
+  document.getElementById('buildset').onclick = renderSetCards;
+  document.getElementById('formatselector').onclick = selectFormat;
+
+  sets = setOptions(format)
+    .then(setList => {
+      let options = setList.sort((a,b) => {
+        let aDate = new Date(a.releaseDate);
+        let bDate = new Date(b.releaseDate);
+        if (aDate > bDate) {
+          return 1;
+        }
+        if (aDate < bDate) {
+          return -1;
+        }
+        return 0;
+      });
+
+      for (let set = 0; set < options.length; set++) {
+        let newOption = document.createElement('option');
+        newOption.value = options[set].type;
+        newOption.text = options[set].name;
+        //logui(`Got ${options[set].name}`)
+        document.getElementById('setselector').add(newOption, null);
+        document.getElementById('setselector').onchange = function() {
+          setRows();
+        };
+      }
+      logui("Getting ranges");
+      getWorkbooknames()
+      .then(ranges => {
+        logui(ranges.length);
+        for (let rangeOptions = 0; rangeOptions < ranges.length; rangeOptions++) {
+          let newOption = document.createElement('option');
+          newOption.value = ranges[rangeOptions];
+          newOption.text = ranges[rangeOptions];
+          document.getElementById('rangeselector').add(newOption, null);
+        }
+        return 0;
+      });
+
+      document.getElementById('toberemoved').remove();
+      document.getElementById('selectionpoint').innerHTML = '';
+      setRows();
+      document.getElementById('newsheet').onchange = function() {
+        newSheet = document.getElementById('newsheet').checked;
+      };
+      initKeepers();
+      return options;
+    })
+    .then(options => {
+      for (var i = 0; i < checkBoxes.length; i++) {
+        let target = Object.assign({}, { name: checkBoxes[i] });
+        document.getElementById(target.name).onchange = function() {
+          selectedFields[target.name] = !selectedFields[target.name];
+          let selections = 2;
+          Object.keys(selectedFields).forEach(field => {
+            if (selectedFields[field]) {
+              selections += 1;
+            }
+          });
+          document.getElementById('printcolumns').innerHTML = selections;
+
+          try {
+            sortOptionsUpdate(target.name, !!selectedFields[target.name]);
+          } catch (error) {
+            document.getElementById('errorpoint').innerHTML = JSON.stringify({
+              err: error.message,
+              stack: error.stack,
+            });
+          }
+        };
+      }
+      logui("Addin ready");
+      return options;
+    })
+    .catch(error => {
+      document.getElementById('errorpoint').innerHTML =
+        'Shit happened: ' + error.message + ' Stack: ' + error.stack;
+    });
+};
 
 /***************************
 Define functions to be used by triggers
@@ -215,7 +221,6 @@ export async function renderSetCards() {
     .then(setData => {
       logui('Fetched props');
       return prepareSet(setData);
-
     })
     .then(cardArray => {
       logui('Sorting complete');

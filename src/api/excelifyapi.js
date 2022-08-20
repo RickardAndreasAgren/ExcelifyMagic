@@ -1,10 +1,10 @@
-let allcards = {};
 import Sortkeeper from './sortkeeper.js';
 import { logui } from '../util/printui.js';
-import pioneerFromAll from './pioneerFromAll.js';
-import allsets from '../data/allsets.json';
+//import allsets from '../data/allsets.json';
 import pioneermeta from '../data/pioneermeta.json';
 import pioneersets from '../data/pioneercards.json';
+import pioneercustom from '../data/pioneercustom.json';
+var pioneer = {};
 
 const preType = ['Legendary','Artifact', 'Enchantment'];
 
@@ -12,24 +12,31 @@ var primaryKeeper;
 var secondaryKeeper;
 
 export async function checkPioneerJson() {
-
-  if(!!pioneermeta.data || !!pioneersets.data) {
+  if(!pioneermeta.data || !pioneersets) {
     throw new Error('No meta data.');
   }
   return new Promise((resolve) => {
     let miss = false;
-    Object.keys(pioneersets.data).forEach(element => {
-      let hit = pioneermeta.data.find(metaset => {
-        return metaset.code == element.code
+    try {
+      Object.keys(pioneersets).forEach(element => {
+        let hit = pioneermeta.data.find(metaset => {
+          return metaset.code == element.code
+        });
+        if(!hit) {
+          logui('Missing set');
+          miss = element.code;
+        }
       });
-      if(!hit) {
-        console.log('Missing set');
-        miss = element.code;
-      }
-    });
+    } catch(error) {
+      logui(error);
+      miss = true;
+    }
+
     if(miss) {
-      resolve({error: {message: `${miss} is missing`}});
+      pioneer = pioneercustom;
+      resolve({error: {message: `${miss} is missing, used custom pioneer data`}});
     } else {
+      pioneer = {data: pioneersets};
       resolve(false);
     }
   });
@@ -46,7 +53,7 @@ export function getSetData(set, format) {
   if (format == 'pioneer') {
     return pioneer.data[set];
   } else if (format == 'all') {
-    return allcards.data[set];
+    return allsets.data[set];
   }
 }
 
@@ -66,7 +73,7 @@ export async function getWorkbooknames() {
     return rangeList;
   })
   .catch(error => {
-    console.log(error);
+    logui(error);
     logui(error.message);
   });
 }
@@ -80,27 +87,21 @@ export function getSetName(set, format) {
   if (format == 'pioneer') {
     name = pioneer.data[set].name;
   } else if (format == 'all') {
-    name = allcards.data[set].name;
+    name = allsets.data[set].name;
   }
-
   logui(name);
   return scrubName(name);
 }
 
 export async function setOptions(format) {
   var pObject = {};
+  logui('Checking pioneer sources');
   const pioneerValidated = await checkPioneerJson();
-
-  if(pioneerValidated && pioneerValidated['error']) {
-    pioneer = await pioneerFromAll();
-  } else {
-    pioneer = pioneerValidated;
-  }
 
   if (format == 'pioneer') {
     pObject = pioneer.data;
   } else if (format == 'all') {
-    pObject = allcards.data;
+    pObject = allsets.data;
   }
   let setsList = [];
   for (let set in pObject) {
