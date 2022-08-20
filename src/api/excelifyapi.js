@@ -43,7 +43,7 @@ export async function loadPioneer() {
 
 export async function checkPioneerJson() {
   let pioneerCards, pioneerMeta;
-  // sync issues risk?
+
   try {
     pioneerCards = await loadPioneer();
     pioneerMeta = await loadPioneerMeta();
@@ -61,6 +61,7 @@ export async function checkPioneerJson() {
         return metaset.code == element.code
       });
       if(!hit) {
+        console.log('Missing set');
         miss = element.code;
       }
     });
