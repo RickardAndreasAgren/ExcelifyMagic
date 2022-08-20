@@ -11,6 +11,7 @@ var primaryKeeper;
 var secondaryKeeper;
 
 export async function loadAll() {
+  /*
   try {
     const loaded = await import('../data/allsets.json')
       .then(({default: allsets}) => {return allsets});
@@ -18,10 +19,11 @@ export async function loadAll() {
   } catch (e) {
     logui(e.message);
     throw new Error('Import failed');
-  }
+  }*/
 }
 
 export async function loadPioneerMeta() {
+  /*
   try {
     const loaded = await require('../data/pioneermeta.json');
     return loaded;
@@ -29,9 +31,11 @@ export async function loadPioneerMeta() {
     logui(e.message);
     throw new Error('Import failed');
   }
+  */
 }
 
 export async function loadPioneer() {
+  /*
   try {
     const loaded = await require('../data/pioneercards.json');
     return loaded;
@@ -39,6 +43,7 @@ export async function loadPioneer() {
     logui(e.message);
     throw new Error('Import failed');
   }
+  */
 }
 
 export async function checkPioneerJson() {
