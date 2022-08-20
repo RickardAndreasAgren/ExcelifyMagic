@@ -1,10 +1,10 @@
 let allcards = {};
 import Sortkeeper from './sortkeeper.js';
 import { logui } from '../util/printui.js';
-import pioneerFromAll from './pioneerFromAll.js'
-const allsets = from '../data/allsets.json'
-const loaded = from '../data/pioneermeta.json';
-var pioneer = from '../data/pioneercards.json';
+import pioneerFromAll from './pioneerFromAll.js';
+import allsets from '../data/allsets.json';
+import pioneermeta from '../data/pioneermeta.json';
+import pioneersets from '../data/pioneercards.json';
 
 const preType = ['Legendary','Artifact', 'Enchantment'];
 
@@ -13,13 +13,13 @@ var secondaryKeeper;
 
 export async function checkPioneerJson() {
 
-  if(!!pioneerMeta.data || !!pioneerCards.data) {
+  if(!!pioneermeta.data || !!pioneersets.data) {
     throw new Error('No meta data.');
   }
   return new Promise((resolve) => {
     let miss = false;
-    Object.keys(pioneerCards.data).forEach(element => {
-      let hit = pioneerMeta.data.find(metaset => {
+    Object.keys(pioneersets.data).forEach(element => {
+      let hit = pioneermeta.data.find(metaset => {
         return metaset.code == element.code
       });
       if(!hit) {
@@ -30,7 +30,7 @@ export async function checkPioneerJson() {
     if(miss) {
       resolve({error: {message: `${miss} is missing`}});
     } else {
-      resolve(pioneerCards);
+      resolve(false);
     }
   });
 }
@@ -91,7 +91,7 @@ export async function setOptions(format) {
   var pObject = {};
   const pioneerValidated = await checkPioneerJson();
 
-  if(pioneerValidated['error']) {
+  if(pioneerValidated && pioneerValidated['error']) {
     pioneer = await pioneerFromAll();
   } else {
     pioneer = pioneerValidated;
