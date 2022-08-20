@@ -2,59 +2,16 @@ let allcards = {};
 import Sortkeeper from './sortkeeper.js';
 import { logui } from '../util/printui.js';
 import pioneerFromAll from './pioneerFromAll.js'
-var allsets = null;
-var pioneer = null;
+const allsets = from '../data/allsets.json'
+const loaded = from '../data/pioneermeta.json';
+var pioneer = from '../data/pioneercards.json';
 
 const preType = ['Legendary','Artifact', 'Enchantment'];
 
 var primaryKeeper;
 var secondaryKeeper;
 
-export async function loadAll() {
-  /*
-  try {
-    const loaded = await import('../data/allsets.json')
-      .then(({default: allsets}) => {return allsets});
-    return loaded;
-  } catch (e) {
-    logui(e.message);
-    throw new Error('Import failed');
-  }*/
-}
-
-export async function loadPioneerMeta() {
-  /*
-  try {
-    const loaded = await require('../data/pioneermeta.json');
-    return loaded;
-  } catch (e) {
-    logui(e.message);
-    throw new Error('Import failed');
-  }
-  */
-}
-
-export async function loadPioneer() {
-  /*
-  try {
-    const loaded = await require('../data/pioneercards.json');
-    return loaded;
-  } catch (e) {
-    logui(e.message);
-    throw new Error('Import failed');
-  }
-  */
-}
-
 export async function checkPioneerJson() {
-  let pioneerCards, pioneerMeta;
-
-  try {
-    pioneerCards = await loadPioneer();
-    pioneerMeta = await loadPioneerMeta();
-  } catch (e) {
-    console.log('No pioneer data available');
-  }
 
   if(!!pioneerMeta.data || !!pioneerCards.data) {
     throw new Error('No meta data.');
