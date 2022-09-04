@@ -233,6 +233,7 @@ export async function renderSetCards() {
           headers.push('Expansion');
           headers.push('Count');
           cardArray.splice(0, 0, headers);
+          logui(`Set headers of new range as following ${cardArray[0]}`)
 
           return printfield(cardArray, newSheet, format);
         });

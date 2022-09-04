@@ -130,8 +130,22 @@ export async function sortOptionsUpdate(option, add) {
   return 0;
 }
 
+export function normalizeColour(colour) {
+  const lt = colour.length;
+  const combos = ['BG','BR','GR','GU','RU','RW','UW','UB','WB','WG'];
+  const threebos = ['BGR','BGU','GRU','GRW','RUW','RUB','UWB','UWG','WBG','WBR'];
+
+
+  let regex = new RegExp(`[${colour}]{${lt}}`,'g');
+  if(lt == 2) {
+    return combos.find(element => element.match(regex));
+  } else if(lt == 3) {
+    return threebos.find(element => element.match(regex));
+  }
+}
+
 function getColour(cardinfo) {
-  let regex = /[A-Z]|[a-z]/g;
+  let regex = /[A-Z]\/*[A-Z]*|[a-z]\/*[a-z]*/g;
   let colour = '';
   if (!cardinfo.manaCost) {
     return 'C';
@@ -139,10 +153,13 @@ function getColour(cardinfo) {
   let cArray = cardinfo.manaCost.match(regex);
   if (cArray && cArray.length > 0) {
     cArray.forEach(element => {
-      if ((colour.length == 0) || (colour.slice(-1) !== element)) {
-        colour += element;
-      }
+      let toAdd = element.length > 1 ? normalizeColour(`${element.replace('/','')}`) : element;
+      toAdd.length > 1 ? toAdd=toAdd+'|' : null;
+      colour += `${toAdd}`;
     });
+    if(colour[-1] == '|') {
+      colour.splice(-1,1);
+    }
   } else {
     colour = 'C';
   }

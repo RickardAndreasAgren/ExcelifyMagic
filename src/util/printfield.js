@@ -1,7 +1,7 @@
 import { numberToLetters, lettersToNumber } from './columnconverter.js';
 import { logui } from '../util/printui.js';
 import { prepareSet, getSortPriorities, buildSet, getSetCode} from '../taskpane/taskpane.js';
-import { getSetData } from '../api/excelifyapi.js';
+import { getSetData, normalizeColour } from '../api/excelifyapi.js';
 
 export async function printfield(twoDimArray, newSheet, format) {
   try {
@@ -20,7 +20,6 @@ export async function printfield(twoDimArray, newSheet, format) {
       var range = currentWorksheet.getUsedRange();
       range.load('columnCount','address');
       await context.sync();
-      let rangeX = range.columnCount;
       var rangeString = '';
 
       var selectedRange = context.workbook.getSelectedRange();
@@ -37,7 +36,6 @@ export async function printfield(twoDimArray, newSheet, format) {
       if(newSheet) {
         logui('Fresh sheet!')
         range = selectedRange;
-        null;
         // =======================================================
         /*
         if selection
@@ -71,6 +69,8 @@ export async function printfield(twoDimArray, newSheet, format) {
               await context.sync();
               if(checkSheets && !checkSheets.isNullObject) {
                 logui('Activating sheet')
+                checkSheets.load('name');
+                await context.sync();
                 name = checkSheets.name;
                 checkSheets.activate();
                 currentWorksheet = checkSheets;
@@ -96,13 +96,7 @@ export async function printfield(twoDimArray, newSheet, format) {
 
           arraySizeX = twoDimArray[0].length;
           arraySizeY = twoDimArray.length;
-          yTarget = arraySizeY;
-          xTarget = await numberToLetters(arraySizeX - 1);
-
-          rangeString = 'A1:' + xTarget + yTarget;
           logui('A')
-          range = currentWorksheet.getRange(rangeString);
-          logui(rangeString);
           // =======================================================
           /*else
             populate from A1
@@ -122,6 +116,7 @@ export async function printfield(twoDimArray, newSheet, format) {
           'rowCount',
         ]);
         logui('Saving counts');
+        await context.sync();
         twoDimArray = await saveCounts(context, range, twoDimArray, xTarget);
         logui('C')
         await clearRange(context,range);
@@ -181,10 +176,21 @@ async function clearRange(context, rangeBusy) {
     logui(`range is ${rangeBusy.toString()}`)
     rangeBusy.clear();
     rangeBusy.delete();
-    logui('Replacing existing named range');
+    logui('Removed existing named range');
     await context.sync();
   }
 }
+
+async function lookupSheetColumnCount(context,currentWorksheet,maxX) {
+  let rangeString = `A1:${maxX}1`;
+  logui('A')
+  let range = currentWorksheet.getRange(rangeString);
+  range.load('values','columnCount');
+
+  await context.sync();
+  let usedRange
+}
+
 
 async function blockSheet(context,name,arraySizeX,arraySizeY) {
   let ownerset = false;
@@ -242,24 +248,31 @@ async function blockSheet(context,name,arraySizeX,arraySizeY) {
   logui('Checking for unique values in expansion column')
   let expansions = await getUniqueValues(columnRange.values);
 
-  logui(`Blocksheet check yielded ${expansions}`)
+  logui(`Blocksheet check yielded ${expansions.keys}`)
   return expansions;
 }
 
 async function saveCounts(context, range, twoDimArray, arraySizeX) {
   // get sort priority, (always starts with expansion)
+  range.load('values');
+  await context.sync();
   let headers = twoDimArray.shift();
   let sorters = await getSortPriorities();
-  // TODO use getSortPriorities on range.values[0] (headers)
-
+  let sheetValues = range.values;
+  let sheetHeaders = null
+  if(sheetValues[0][0] == "Name") {
+    sheetHeaders = sheetValues.shift();
+  }
   let pSort = sorters.pst ? sorters.pst : false;
   let sSort = sorters.sst ? sorters.sst : false;
-  let countIndexArray = twoDimArray[0].length-1;
-  let expansionIndexArray = countIndex-1;
-  let countIndexRange = range.columnCount-1;
+  let countIndexArray = headers.length-1;
+  let expansionIndexArray = countIndexArray-1;
+  let countIndexRange = sheetValues[0].length-1;
   let expansionIndexRange = countIndexRange-1;
-  let countIndex = null;
   let expansionIndex = null;
+
+  logui(`WorkArray is ${twoDimArray.length} long with ${countIndexArray+1} columns`);
+  logui(`Range to match is ${sheetValues.length} long with ${countIndexRange+1} columns`);
 
   const threeSort = (a, b) => {
     if (a[expansionIndex] < b[expansionIndex]) {
@@ -288,27 +301,48 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
     return 0;
   };
   logui('Sorting setups complete')
-  range.load('values');
-  await context.sync();
-  let sheetValues = range.values;
 
   // add expansion sort
   logui('Sorting sheet values');
-
-  countIndex = countIndexRange;
   expansionIndex = expansionIndexRange;
+  sheetValues = await ensureColours(sheetValues, sheetHeaders);
   sheetValues.sort(threeSort);
+
   logui('Sorting value array');
-  countIndex = countIndexArray;
   expansionIndex = expansionIndexArray;
   twoDimArray.sort(threeSort);
-  let sheetCountColumn = sheetValues[0].length - 1
+
   logui('Saving count values');
+  /*
+
+  Rakdos Drake,B,3,Creature,Common,Dragon's Maze,0 not matched, setting count 0
+  Was compared to Pontiff of Blight,B,6,Creature,Dragon's Maze,2
+  Sinister Possession,B,1,Enchantment Aura,Common,Dragon's Maze,0 not matched, setting count 0
+  Was compared to Rakdos Drake,B,3,Creature,Dragon's Maze,4
+  */
+  let offset = 0;
   twoDimArray.forEach((element,index) => {
-    twoDimArray[index][element.length-1] = sheetValues[index][sheetCountColumn]
+    if(element[0] == sheetValues[index][0] || element[0].replace(' ','') == sheetValues[index][0]) {
+      logui(`${sheetValues[index]}`)
+      logui(`${element}`)
+      element[countIndexArray] = sheetValues[index+offset][countIndexRange];
+    } else {
+      logui(`${element} not matched, setting count 0`);
+      logui(`Was compared to ${sheetValues[index]}`);
+      twoDimArray[index][countIndexArray] = '0';
+      offset -= 1;
+    }
   })
   logui('Restoring header to array');
   twoDimArray.splice(0,0,headers);
 
-  return twoDimArray
+  return twoDimArray;
+}
+
+async function ensureColours(sheetValues, sheetHeaders) {
+  const colourIndex = sheetHeaders.findIndex(element => element == 'Colour' || element == 'Color');
+  for (let i = 0; i < sheetValues; i++) {
+    sheetValues[i][colourIndex] = normalizeColour(sheetValues[i][colourIndex]);
+  }
+  return sheetValues;
 }
