@@ -16,6 +16,7 @@ import {
   initKeepers,
   getSetData,
   getSetName,
+  setupCardSet,
   setupCard,
   getWorkbooknames
 } from '../api/excelifyapi.js';
@@ -271,9 +272,10 @@ export async function prepareSet(setData) {
   if (selectedFieldsCount < 1) {
     throw new Error('No options selected');
   }
-  cardsList.forEach(card => {
-    setupArray.push(setupCard(card, setData.props, setData.set.name));
-  });
+
+  setupArray = await setupCardSet(cardsList, setData, setupArray);
+  logui(`Setup produced ${setupArray.length} cards`);
+
   return Promise.all(setupArray)
     .then(results => {
       return results;

@@ -128,6 +128,7 @@ export async function printfield(twoDimArray, newSheet, format) {
       /*
         printNewRange
         save
+        The argument is invalid or missing or has an incorrect format.
       */
       logui('Using rangestring');
       range = currentWorksheet.getRange(rangeString);
@@ -190,7 +191,6 @@ async function lookupSheetColumnCount(context,currentWorksheet,maxX) {
   await context.sync();
   let usedRange
 }
-
 
 async function blockSheet(context,name,arraySizeX,arraySizeY) {
   let ownerset = false;
@@ -315,22 +315,46 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
   logui('Saving count values');
   /*
 
-  Rakdos Drake,B,3,Creature,Common,Dragon's Maze,0 not matched, setting count 0
-  Was compared to Pontiff of Blight,B,6,Creature,Dragon's Maze,2
-  Sinister Possession,B,1,Enchantment Aura,Common,Dragon's Maze,0 not matched, setting count 0
-  Was compared to Rakdos Drake,B,3,Creature,Dragon's Maze,4
   */
-  let offset = 0;
+  let offset = 1;
   twoDimArray.forEach((element,index) => {
-    if(element[0] == sheetValues[index][0] || element[0].replace(' ','') == sheetValues[index][0]) {
-      logui(`${sheetValues[index]}`)
-      logui(`${element}`)
-      element[countIndexArray] = sheetValues[index+offset][countIndexRange];
+    logui(`Checking ${index}`);
+    if(!!sheetValues[index] && (element[0] == sheetValues[index][0] || element[0].replace(' ','') == sheetValues[index][0])) {
+      logui(`${sheetValues[index]}`);
+      logui(`${element}`);
+      twoDimArray[index][countIndexArray] = sheetValues[index][countIndexRange];
     } else {
-      logui(`${element} not matched, setting count 0`);
-      logui(`Was compared to ${sheetValues[index]}`);
+      logui(`${element} not matched`);
+      logui(`Was compared to ${sheetValues[index]}, proceeding search forward`);
+      let done = false;
+      while(offset+index < sheetValues.length) {
+        if(element[0] == sheetValues[offset+index][0] || element[0].replace(' ','') == sheetValues[offset+index][0]) {
+          twoDimArray[index][countIndexArray] = sheetValues[index+offset][countIndexRange];
+          done = true;
+          logui(`Hit!`);
+          break;
+        }
+        offset++;
+      }
+      if(done) {
+        return;
+      }
+      offset = 1;
+      logui(`Searching backwards`);
+      while(index-offset > 0) {
+        if(!!sheetValues[index-offset] && (element[0] == sheetValues[index-offset][0] || element[0].replace(' ','') == sheetValues[index-offset][0])) {
+          twoDimArray[index][countIndexArray] = sheetValues[index-offset][countIndexRange];
+          done = true;
+          logui(`Hit!`);
+          break;
+        }
+        offset++;
+      }
+      if(done) {
+        return;
+      }
+      logui(`Leaving at 0`);
       twoDimArray[index][countIndexArray] = '0';
-      offset -= 1;
     }
   })
   logui('Restoring header to array');

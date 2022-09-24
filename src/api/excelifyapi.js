@@ -137,6 +137,7 @@ export function normalizeColour(colour) {
 
 
   let regex = new RegExp(`[${colour}]{${lt}}`,'g');
+
   if(lt == 2) {
     return combos.find(element => element.match(regex));
   } else if(lt == 3) {
@@ -145,7 +146,7 @@ export function normalizeColour(colour) {
 }
 
 function getColour(cardinfo) {
-  let regex = /[A-Z]\/*[A-Z]*|[a-z]\/*[a-z]*/g;
+  let regex = /(?=[^X])[A-Z]\/*[A-Z]*|[a-z]\/*[a-z]*/g;
   let colour = '';
   if (!cardinfo.manaCost) {
     return 'C';
@@ -153,8 +154,8 @@ function getColour(cardinfo) {
   let cArray = cardinfo.manaCost.match(regex);
   if (cArray && cArray.length > 0) {
     cArray.forEach(element => {
+      colour.length > 0 ? colour+='|' : null;
       let toAdd = element.length > 1 ? normalizeColour(`${element.replace('/','')}`) : element;
-      toAdd.length > 1 ? toAdd=toAdd+'|' : null;
       colour += `${toAdd}`;
     });
     if(colour[-1] == '|') {
@@ -168,7 +169,14 @@ function getColour(cardinfo) {
 };
 
 function getConvertedManaCost(cardinfo) {
-  return cardinfo.manaValue;
+  let returner = cardinfo.manaValue;
+  // multi X?
+  const regex = /[X]/g;
+  const hits = cardinfo.manaCost ? cardinfo.manaCost.match(regex) : false;
+  if(!!hits && hits.length > 0) {
+    returner = returner+'X';
+  }
+  return returner;
 }
 
 function getType(cardinfo) {
@@ -202,18 +210,34 @@ function getStats(cardinfo) {
   return stats
 };
 
+function extractProp(prop, info) {
+  if(!info.bside) {
+    return info[prop];
+  }
+  if(prop === 'name' && info.bside && info.bside.faceName && info.faceName) {
+    return `${info['faceName']} // ${info.bside['faceName']}`
+  }
+  if(info.bside) {
+    return `${info[prop]} // ${info.bside[prop]}`
+  }
+}
+
+// double-calls?
+
 const CARDOPTIONS = {
-  cbname: (cardinfo) => {return cardinfo.name},
-  cbnumber: (cardinfo) => {return cardinfo.number},
+  cbname: (cardinfo) => {return extractProp('name', cardinfo)},
+  cbnumber: (cardinfo) => {return extractProp('number', cardinfo)},
   cbcolor: getColour,
   cbcmc: getConvertedManaCost,
   cbtype: getType,
-  cbsubtype: (cardinfo) => {return cardinfo.subtypes},
+  cbsubtype: (cardinfo) => {return extractProp('subtypes',cardinfo)},
   cbrarity: getRarity,
   cbstats: getStats,
 };
 
-export function setupCard(cardinfo, useOptions, setname) {
+export function setupCard(cardinfo, useOptions, setname, bside) {
+  // colour ?
+  cardinfo['bside'] = bside;
   return new Promise((resolve, reject) => {
     let cardAsArray = [];
     for (let opt = 0;opt < useOptions.length; opt++) {
@@ -223,4 +247,28 @@ export function setupCard(cardinfo, useOptions, setname) {
     cardAsArray.push('0');
     resolve(cardAsArray);
   });
+}
+
+const BLOCKEDLAYOUTS = {
+
+};
+
+export function setupCardSet(cards, setData, setupArray) {
+  var bsides = [];
+  var cardsList = [];
+  cards.forEach(card => {
+    if(!!card.side && card.side.toUpperCase() !== 'A') {
+      bsides.push(card);
+      return;
+    }
+    if(!!card.layout && BLOCKEDLAYOUTS.contains(card.layout.toUpperCase()) {
+      return;
+    }
+    cardsList.push(card);
+  });
+  cardsList.forEach(card => {
+    const bside = bsides.find(bcard => bcard.uuid === card.otherFaceIds[0]);
+    setupArray.push(setupCard(card, setData.props, setData.set.name, bside));
+  });
+  return setupArray;
 }
