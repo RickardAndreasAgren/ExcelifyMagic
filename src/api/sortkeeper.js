@@ -1,16 +1,15 @@
-
-import {logui} from '../util/printui.js';
-import optionText from './optionText.js';
+//import { logui } from "../util/printui.js";
+import optionText from "./optionText.js";
 /*
 
 */
-
+/* global document */
 class Sortkeeper {
   constructor(name, activator) {
     this.id = name;
     this.aid = activator;
     this.options = {};
-    this.selected = '';
+    this.selected = "";
     this.override = null;
     this.active = false;
 
@@ -49,17 +48,15 @@ class Sortkeeper {
     let newSelection = myNode.options[myNode.selectedIndex];
     this.selected = newSelection.value;
     if (this.override) {
-      let o = this.override(newSelection.value);
+      this.override(newSelection.value);
     }
   }
 
   overrideOption(selectedName) {
     const myNode = document.getElementById(this.id);
     if (this.selected === selectedName) {
-      let selected = 0;
       for (let i = 0; i < Object.keys(this.options).length; i++) {
-        if (this.options[Object.keys(this.options)[i]]
-          !== selectedName) {
+        if (this.options[Object.keys(this.options)[i]] !== selectedName) {
           this.selected = this.options[Object.keys(this.options)[i]];
           break;
         }
@@ -72,7 +69,7 @@ class Sortkeeper {
   removeOption(optionName) {
     if (this.options[optionName]) {
       if (Object.keys(this.options).length === 1) {
-        this.selected = '';
+        this.selected = "";
       }
 
       delete this.options[optionName];
@@ -93,14 +90,14 @@ class Sortkeeper {
     if (!this.options[optionName]) {
       var myNode = document.getElementById(this.id);
       this.options[optionName] = optionName;
-      let addThis = document.createElement('option');
+      let addThis = document.createElement("option");
       addThis.value = this.options[optionName];
       addThis.text = optionText[optionName];
-      addThis.id = this.options[optionName]
+      addThis.id = this.options[optionName];
 
       myNode.add(addThis);
 
-      if (this.selected === '') {
+      if (this.selected === "") {
         this.selected = optionName;
       }
     }

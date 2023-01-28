@@ -4,8 +4,15 @@
  * See LICENSE in the project root for license information.
  */
 
-Office.onReady(info => {
+/* global Office window self global */
+
+Office.onReady((info) => {
   // If needed, Office.js is ready to be called
+  if (window) {
+    window.officeLoaded = {
+      ...info,
+    };
+  }
 });
 
 /**
@@ -15,24 +22,29 @@ Office.onReady(info => {
 function action(event) {
   const message = {
     type: Office.MailboxEnums.ItemNotificationMessageType.InformationalMessage,
-    message: 'Performed action.',
-    icon: 'Icon.80x80',
+    message: "Performed action.",
+    icon: "Icon.80x80",
     persistent: true,
-  }
+  };
 
   // Show a notification message
-  Office.context.mailbox.item.notificationMessages
-  .replaceAsync('action', message);
+  Office.context.mailbox.item.notificationMessages.replaceAsync(
+    "action",
+    message
+  );
 
   // Be sure to indicate when the add-in command function is complete
   event.completed();
 }
 
 function getGlobal() {
-  return (typeof self !== 'undefined') ? self :
-    (typeof window !== 'undefined') ? window :
-    (typeof global !== 'undefined') ? global :
-    undefined;
+  return typeof self !== "undefined"
+    ? self
+    : typeof window !== "undefined"
+    ? window
+    : typeof global !== "undefined"
+    ? global
+    : undefined;
 }
 
 const g = getGlobal();

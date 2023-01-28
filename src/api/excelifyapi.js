@@ -1,92 +1,97 @@
-import Sortkeeper from './sortkeeper.js';
-import { logui } from '../util/printui.js';
-//import allsets from '../data/allsets.json';
-import pioneermeta from '../data/pioneermeta.json';
-import pioneersets from '../data/pioneercards.json';
-import pioneercustom from '../data/pioneercustom.json';
+import Sortkeeper from "./sortkeeper.js";
+import { printui as logui } from "../util/printui.js";
+//import allsets from "../data/allsets.json";
+import pioneermeta from "../data/pioneermeta.json";
+import pioneersets from "../data/pioneercards.json";
+import pioneercustom from "../data/pioneercustom.json";
+const allsets = {};
+
+/* global Excel */
+
 var pioneer = {};
 
-const preType = ['Legendary','Artifact', 'Enchantment'];
+const preType = ["Legendary", "Artifact", "Enchantment"];
 
 var primaryKeeper;
 var secondaryKeeper;
 
 export async function checkPioneerJson() {
-  if(!pioneermeta.data || !pioneersets) {
-    throw new Error('No meta data.');
+  if (!pioneermeta.data || !pioneersets) {
+    throw new Error("No meta data.");
   }
   return new Promise((resolve) => {
     let miss = false;
     try {
-      Object.keys(pioneersets).forEach(element => {
-        let hit = pioneermeta.data.find(metaset => {
-          return metaset.code == element.code
+      Object.keys(pioneersets).forEach((element) => {
+        let hit = pioneermeta.data.find((metaset) => {
+          return metaset.code == element.code;
         });
-        if(!hit) {
-          logui('Missing set');
+        if (!hit) {
+          logui("Missing set");
           miss = element.code;
         }
       });
-    } catch(error) {
+    } catch (error) {
       logui(error);
       miss = true;
     }
 
-    if(miss) {
+    if (miss) {
       pioneer = pioneercustom;
-      resolve({error: {message: `${miss} is missing, used custom pioneer data`}});
+      resolve({
+        error: { message: `${miss} is missing, used custom pioneer data` },
+      });
     } else {
-      pioneer = {data: pioneersets};
+      pioneer = { data: pioneersets };
       resolve(false);
     }
   });
 }
 
 export async function initKeepers() {
-  primaryKeeper = new Sortkeeper('primarysort', 'psortactive');
-  secondaryKeeper = new Sortkeeper('secondarysort', 'ssortactive');
+  primaryKeeper = new Sortkeeper("primarysort", "psortactive");
+  secondaryKeeper = new Sortkeeper("secondarysort", "ssortactive");
   primaryKeeper.setOverride(secondaryKeeper.overrideOption);
   secondaryKeeper.setOverride(primaryKeeper.overrideOption);
 }
 
 export function getSetData(set, format) {
-  if (format == 'pioneer') {
+  if (format == "pioneer") {
     return pioneer.data[set];
-  } else if (format == 'all') {
+  } else if (format == "all") {
     return allsets.data[set];
   }
 }
 
 export async function getWorkbooknames() {
-  return await Excel.run(async context => {
+  return await Excel.run(async (context) => {
     logui("Getting names");
-    await context.workbook.names.load('name, type');
-    await context.sync()
+    await context.workbook.names.load("name, type");
+    await context.sync();
     const nameCollection = await context.workbook.names.items;
     logui(`Got collection of names sized ${nameCollection.length}`);
     var rangeList = [];
-    nameCollection.forEach(nameItem => {
-      if(nameItem.type == "Range") {
+    nameCollection.forEach((nameItem) => {
+      if (nameItem.type == "Range") {
         rangeList.push(nameItem.name);
       }
     });
     return rangeList;
-  })
-  .catch(error => {
+  }).catch((error) => {
     logui(error);
     logui(error.message);
   });
 }
 
 function scrubName(text) {
-  return text.replace(/[^\w\s]/gi, '')
+  return text.replace(/[^\w\s]/gi, "");
 }
 
 export function getSetName(set, format) {
-  let name = '';
-  if (format == 'pioneer') {
+  let name = "";
+  if (format == "pioneer") {
     name = pioneer.data[set].name;
-  } else if (format == 'all') {
+  } else if (format == "all") {
     name = allsets.data[set].name;
   }
   logui(name);
@@ -95,18 +100,21 @@ export function getSetName(set, format) {
 
 export async function setOptions(format) {
   var pObject = {};
-  logui('Checking pioneer sources');
-  const pioneerValidated = await checkPioneerJson();
+  logui("Checking pioneer sources");
+  await checkPioneerJson();
 
-  if (format == 'pioneer') {
+  if (format == "pioneer") {
     pObject = pioneer.data;
-  } else if (format == 'all') {
+  } else if (format == "all") {
     pObject = allsets.data;
   }
   let setsList = [];
   for (let set in pObject) {
-    setsList.push({ releaseDate: pObject[set].releaseDate,
-      type: pObject[set].code, name: pObject[set].name });
+    setsList.push({
+      releaseDate: pObject[set].releaseDate,
+      type: pObject[set].code,
+      name: pObject[set].name,
+    });
   }
   setsList.sort();
   return setsList;
@@ -124,7 +132,7 @@ export async function sortOptionsUpdate(option, add) {
       primaryKeeper.removeOption(option);
       secondaryKeeper.removeOption(option);
     } catch (error) {
-      printui(error.message + ' Stack: ' + error.stack);
+      logui(error.message + " Stack: " + error.stack);
     }
   }
   return 0;
@@ -132,142 +140,168 @@ export async function sortOptionsUpdate(option, add) {
 
 export function normalizeColour(colour) {
   const lt = colour.length;
-  const combos = ['BG','BR','GR','GU','RU','RW','UW','UB','WB','WG'];
-  const threebos = ['BGR','BGU','GRU','GRW','RUW','RUB','UWB','UWG','WBG','WBR'];
+  const combos = ["BG", "BR", "GR", "GU", "RU", "RW", "UW", "UB", "WB", "WG"];
+  const threebos = [
+    "BGR",
+    "BGU",
+    "GRU",
+    "GRW",
+    "RUW",
+    "RUB",
+    "UWB",
+    "UWG",
+    "WBG",
+    "WBR",
+  ];
 
+  let regex = new RegExp(`[${colour}]{${lt}}`, "g");
 
-  let regex = new RegExp(`[${colour}]{${lt}}`,'g');
-
-  if(lt == 2) {
-    return combos.find(element => element.match(regex));
-  } else if(lt == 3) {
-    return threebos.find(element => element.match(regex));
+  if (lt == 2) {
+    return combos.find((element) => element.match(regex));
+  } else if (lt == 3) {
+    return threebos.find((element) => element.match(regex));
   }
 }
 
 function getColour(cardinfo) {
+  const bside = cardinfo.bside ? " // " + getColour(cardinfo.bside) : "";
   let regex = /(?=[^X])[A-Z]\/*[A-Z]*|[a-z]\/*[a-z]*/g;
-  let colour = '';
+  let colour = "";
   if (!cardinfo.manaCost) {
-    return 'C';
+    return "C" + bside;
   }
   let cArray = cardinfo.manaCost.match(regex);
   if (cArray && cArray.length > 0) {
-    cArray.forEach(element => {
-      colour.length > 0 ? colour+='|' : null;
-      let toAdd = element.length > 1 ? normalizeColour(`${element.replace('/','')}`) : element;
+    cArray.forEach((element) => {
+      colour.length > 0 ? (colour += "|") : null;
+      let toAdd =
+        element.length > 1
+          ? normalizeColour(`${element.replace("/", "")}`)
+          : element;
       colour += `${toAdd}`;
     });
-    if(colour[-1] == '|') {
-      colour.splice(-1,1);
+    if (colour[-1] == "|") {
+      colour.splice(-1, 1);
     }
   } else {
-    colour = 'C';
+    colour = "C";
   }
 
-  return colour;
-};
+  return colour + bside;
+}
 
 function getConvertedManaCost(cardinfo) {
-  let returner = cardinfo.manaValue;
+  const bside = cardinfo.bside
+    ? " // " + getConvertedManaCost(cardinfo.bside)
+    : "";
+  let returner = cardinfo.faceConvertedManaCost
+    ? cardinfo.faceConvertedManaCost
+    : cardinfo.manaValue;
   // multi X?
   const regex = /[X]/g;
   const hits = cardinfo.manaCost ? cardinfo.manaCost.match(regex) : false;
-  if(!!hits && hits.length > 0) {
-    returner = returner+'X';
+  if (!!hits && hits.length > 0) {
+    returner = returner + "X";
   }
-  return returner;
+  return returner + bside;
 }
 
 function getType(cardinfo) {
+  const bside = cardinfo.bside ? " // " + getType(cardinfo.bside) : "";
   let fulltype = cardinfo.type;
-  let splitType = fulltype.split(' ');
+  let splitType = fulltype.split(" ");
   if (splitType.length > 1) {
     if (preType.includes(splitType[0])) {
-      if (splitType[1] == '—') {
-        splitType.splice(1,1);
+      if (splitType[1] == "—") {
+        splitType.splice(1, 1);
       }
-      return splitType[0] + ' ' + splitType[1];
+      return splitType[0] + " " + splitType[1] + bside;
     } else {
-      return splitType[0];
+      return splitType[0] + bside;
     }
   } else {
-    return fulltype;
+    return fulltype + bside;
   }
-};
+}
 
 function getRarity(cardinfo) {
-  return cardinfo.rarity[0].toUpperCase() + cardinfo.rarity.substring(1);
+  const bside = cardinfo.bside ? " // " + getRarity(cardinfo.bside) : "";
+  return (
+    cardinfo.rarity[0].toUpperCase() + cardinfo.rarity.substring(1) + bside
+  );
 }
 
 function getStats(cardinfo) {
-  let stats = '';
-  if (cardinfo.types.includes('Planeswalker')) {
+  const bside = cardinfo.bside ? " // " + getStats(cardinfo.bside) : "";
+  let stats = "";
+  if (cardinfo.types.includes("Planeswalker")) {
     stats = cardinfo.loyalty;
-  } else if (cardinfo.types.includes('Creature')) {
-    stats = cardinfo.power + '/' + cardinfo.toughness;
+  } else if (cardinfo.types.includes("Creature")) {
+    stats = cardinfo.power + "/" + cardinfo.toughness;
   }
-  return stats
-};
+  return stats + bside;
+}
 
 function extractProp(prop, info) {
-  if(!info.bside) {
+  if (!info.bside) {
     return info[prop];
   }
-  if(prop === 'name' && info.bside && info.bside.faceName && info.faceName) {
-    return `${info['faceName']} // ${info.bside['faceName']}`
+  if (prop === "name" && info.bside && info.bside.faceName && info.faceName) {
+    return `${info["faceName"]} // ${info.bside["faceName"]}`;
   }
-  if(info.bside) {
-    return `${info[prop]} // ${info.bside[prop]}`
+  if (info.bside) {
+    return `${info[prop]} // ${info.bside[prop]}`;
   }
 }
 
-// double-calls?
-
 const CARDOPTIONS = {
-  cbname: (cardinfo) => {return extractProp('name', cardinfo)},
-  cbnumber: (cardinfo) => {return extractProp('number', cardinfo)},
+  cbname: (cardinfo) => {
+    return extractProp("name", cardinfo);
+  },
+  cbnumber: (cardinfo) => {
+    return extractProp("number", cardinfo);
+  },
   cbcolor: getColour,
   cbcmc: getConvertedManaCost,
   cbtype: getType,
-  cbsubtype: (cardinfo) => {return extractProp('subtypes',cardinfo)},
+  cbsubtype: (cardinfo) => {
+    return extractProp("subtypes", cardinfo);
+  },
   cbrarity: getRarity,
   cbstats: getStats,
 };
 
 export function setupCard(cardinfo, useOptions, setname, bside) {
   // colour ?
-  cardinfo['bside'] = bside;
-  return new Promise((resolve, reject) => {
+  cardinfo["bside"] = bside;
+  return new Promise((resolve) => {
     let cardAsArray = [];
-    for (let opt = 0;opt < useOptions.length; opt++) {
+    for (let opt = 0; opt < useOptions.length; opt++) {
       cardAsArray.push(CARDOPTIONS[useOptions[opt]](cardinfo));
     }
     cardAsArray.push(setname);
-    cardAsArray.push('0');
+    cardAsArray.push("0");
     resolve(cardAsArray);
   });
 }
 
-const BLOCKEDLAYOUTS = {
-
-};
+const BLOCKEDLAYOUTS = ["MELD"];
 
 export function setupCardSet(cards, setData, setupArray) {
   var bsides = [];
   var cardsList = [];
-  cards.forEach(card => {
-    if(!!card.side && card.side.toUpperCase() !== 'A') {
+  cards.forEach((card) => {
+    if (!!card.side && card.side.toUpperCase() !== "A") {
       bsides.push(card);
       return;
     }
-    if(!!card.layout && BLOCKEDLAYOUTS.contains(card.layout.toUpperCase()) {
+    if (!!card.layout && BLOCKEDLAYOUTS.contains(card.layout.toUpperCase())) {
       return;
     }
     cardsList.push(card);
   });
-  cardsList.forEach(card => {
-    const bside = bsides.find(bcard => bcard.uuid === card.otherFaceIds[0]);
+  cardsList.forEach((card) => {
+    const bside = bsides.find((bcard) => bcard.uuid === card.otherFaceIds[0]);
     setupArray.push(setupCard(card, setData.props, setData.set.name, bside));
   });
   return setupArray;
