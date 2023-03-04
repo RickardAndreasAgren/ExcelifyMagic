@@ -1,5 +1,5 @@
 import Sortkeeper from "./sortkeeper.js";
-import { printui as logui } from "../util/printui.js";
+import { logui } from "../util/printui.js";
 //import allsets from "../data/allsets.json";
 import pioneermeta from "../data/pioneermeta.json";
 import pioneersets from "../data/pioneercards.json";
@@ -201,7 +201,11 @@ function getConvertedManaCost(cardinfo) {
   const regex = /[X]/g;
   const hits = cardinfo.manaCost ? cardinfo.manaCost.match(regex) : false;
   if (!!hits && hits.length > 0) {
-    returner = returner + "X";
+    var xes = hits.length;
+    while (xes > 0) {
+      returner = returner + "X";
+      xes--;
+    }
   }
   return returner + bside;
 }
