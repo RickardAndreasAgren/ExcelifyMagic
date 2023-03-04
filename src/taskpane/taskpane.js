@@ -167,6 +167,7 @@ async function getSelectedProps() {
 }
 
 export async function buildSet(setCode = null) {
+  setCode ? logui(`Got ${setCode} for build set.`) : null;
   let setlist = document.getElementById("setselector");
   let activeSet = setCode ? setCode : setlist[setlist.selectedIndex].value;
   let name = getSetName(activeSet, format);
@@ -262,6 +263,7 @@ export async function prepareSet(setData) {
   var cardsList = setData.set.cards;
   var setupArray = [];
   let selectedFieldsCount = 0;
+  logui(`Targeting fields`);
   Object.keys(selectedFields).forEach((field) => {
     if (selectedFields[field] == true) {
       logui(field);
@@ -272,6 +274,7 @@ export async function prepareSet(setData) {
     throw new Error("No options selected");
   }
 
+  logui(`Fetching cards data for set`);
   setupArray = await setupCardSet(cardsList, setData, setupArray);
   logui(`Setup produced ${setupArray.length} cards`);
 
