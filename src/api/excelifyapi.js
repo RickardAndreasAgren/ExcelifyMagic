@@ -1,6 +1,13 @@
 import Sortkeeper from "./sortkeeper.js";
 import { logui } from "../util/printui.js";
-import { preType, cardTypes, combos, threebos, fourbos } from "model/models.js";
+import {
+  preType,
+  modelEnums as me,
+  getTypeFromLayout,
+  combos,
+  threebos,
+  fourbos,
+} from "model/models.js";
 //import allsets from "../data/allsets.json";
 import pioneermeta from "../data/pioneermeta.json";
 import pioneersets from "../data/pioneercards.json";
@@ -154,6 +161,18 @@ export function normalizeColour(colour) {
   }
 }
 
+function getName(cardinfo, cardType) {
+  if (cardType.sideformat === me.side[2]) {
+    return me.side[2]
+      .replace("_a_", cardinfo["name"])
+      .replace("_b_", cardinfo.bside["name"]);
+  }
+  if (cardType.sideformat === me.side[3]) {
+    return `${cardinfo["faceName"]}//${cardinfo.bside["faceName"]}`;
+  }
+  return cardinfo["name"];
+}
+
 function getColour(cardinfo) {
   const bside = cardinfo.bside ? "//" + getColour(cardinfo.bside) : "";
   let regex = /(?=[^X])[A-Z]\/*[A-Z]*|[a-z]\/*[a-z]*/g;
@@ -181,28 +200,49 @@ function getColour(cardinfo) {
   return colour + bside;
 }
 
-function getConvertedManaCost(cardinfo) {
+function getConvertedManaCost(cardinfo, cardType) {
   const bside = cardinfo.bside
-    ? "//" + getConvertedManaCost(cardinfo.bside)
+    ? getConvertedManaCost(cardinfo.bside, false)
     : "";
-  let returner = cardinfo.faceConvertedManaCost
-    ? cardinfo.faceConvertedManaCost
-    : cardinfo.manaValue;
-  // multi X?
-  const regex = /[X]/g;
-  const hits = cardinfo.manaCost ? cardinfo.manaCost.match(regex) : false;
-  if (!!hits && hits.length > 0) {
-    var xes = hits.length;
-    while (xes > 0) {
-      returner = returner + "X";
-      xes--;
+  const xses = (() => {
+    let returner = "";
+    const regex = /[X]/g;
+    const hits = cardinfo.manaCost ? cardinfo.manaCost.match(regex) : false;
+    if (!!hits && hits.length > 0) {
+      var xes = hits.length;
+      while (xes > 0) {
+        returner = returner + "X";
+        xes--;
+      }
     }
+  })();
+
+  if (cardType.manaCostFormat === me.cmc[2]) {
+    return me.cmc[2]
+      .replace("_a_", xses + cardinfo["manaValue"])
+      .replace("_b_", bside);
   }
-  return returner + bside;
+  if (cardType.manaCostFormat === me.cmc[3]) {
+    return me.cmc[3]
+      .replace("_a_", xses + cardinfo["manaValue"])
+      .replace("_b_", bside);
+  }
+  if (cardType.manaCostFormat === me.cmc[4]) {
+    return me.cmc[4]
+      .replace("_a_", xses + cardinfo["manaValue"])
+      .replace("_face_", bside);
+  }
+  return cardinfo["manaValue"];
 }
 
 function getType(cardinfo) {
   const bside = cardinfo.bside ? "//" + getType(cardinfo.bside) : "";
+
+  const prefix = cardinfo.supertypes.includes("Legendary ")
+    ? "Legendary"
+    : cardinfo.supertypes.includes("Basic ")
+    ? "Basic"
+    : "";
   let fulltype = cardinfo.type;
   let splitType = fulltype.split(" ");
   if (splitType.length > 1) {
@@ -210,12 +250,12 @@ function getType(cardinfo) {
       if (splitType[1] == "—") {
         splitType.splice(1, 1);
       }
-      return splitType[0] + " " + splitType[1] + bside;
+      return prefix + splitType[0] + " " + splitType[1] + bside;
     } else {
-      return splitType[0] + bside;
+      return prefix + splitType[0] + bside;
     }
   } else {
-    return fulltype + bside;
+    return prefix + fulltype + bside;
   }
 }
 
@@ -226,48 +266,58 @@ function getRarity(cardinfo) {
   );
 }
 
-function getStats(cardinfo) {
-  const bside = cardinfo.bside ? "//" + getStats(cardinfo.bside) : "";
+function getStats(cardinfo, cardType) {
+  const bside = cardinfo.bside ? getStats(cardinfo.bside) : "";
   let stats = "";
   if (cardinfo.types.includes("Planeswalker")) {
     stats = cardinfo.loyalty;
   } else if (cardinfo.types.includes("Creature")) {
     stats = cardinfo.power + "/" + cardinfo.toughness;
   }
-  return stats + bside;
+
+  if (cardType.manaCostFormat === me.ptEnum[2]) {
+    return me.pt[2].replace("_p/t_", stats).replace("_r/u_", bside);
+  }
+  if (cardType.manaCostFormat === me.ptEnum[3]) {
+    const TODOleveled = stats;
+    const TODOleveled2 = stats;
+    return me.pt[3]
+      .replace("_p/t_", stats)
+      .replace("_q/u_", TODOleveled)
+      .replace("_r/v_", TODOleveled2);
+  }
+  return stats;
 }
 
 function extractProp(prop, info) {
   if (!info.bside) {
     return info[prop];
   }
-  if (prop === "name" && info.bside && info.bside.faceName && info.faceName) {
-    return `${info["faceName"]}//${info.bside["faceName"]}`;
-  }
-  if (info.bside) {
-    return `${info[prop]}//${info.bside[prop]}`;
-  }
+  return `${info[prop]}//${info.bside[prop]}`;
 }
 
 const CARDOPTIONS = {
   cbname: (cardinfo) => {
-    return extractProp("name", cardinfo);
+    return getName(cardinfo, getTypeFromLayout(cardinfo.layout));
   },
   cbnumber: (cardinfo) => {
     return extractProp("number", cardinfo);
   },
   cbcolor: getColour,
-  cbcmc: getConvertedManaCost,
+  cbcmc: (cardinfo) => {
+    return getConvertedManaCost(cardinfo, getTypeFromLayout(cardinfo.layout));
+  },
   cbtype: getType,
   cbsubtype: (cardinfo) => {
     return extractProp("subtypes", cardinfo);
   },
   cbrarity: getRarity,
-  cbstats: getStats,
+  cbstats: (cardinfo) => {
+    return getStats(cardinfo, getTypeFromLayout(cardinfo.layout));
+  },
 };
 
 export function setupCard(cardinfo, useOptions, setname, bside) {
-  // colour ?
   cardinfo["bside"] = bside;
 
   return new Promise((resolve) => {

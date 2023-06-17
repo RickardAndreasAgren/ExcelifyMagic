@@ -1,20 +1,26 @@
 const cmcEnum = {
-  1: "1", // regular
-  2: "1 + 1", // combinable cost value; Fuse
-  3: "1 // 1", // alternative cost or CMC
-  4: "1 // face", // alternative cost or CMC from other face
+  1: "_a_", // regular
+  2: "_a_ + _b_", // combinable cost value; Fuse
+  3: "_a_ // _b_", // alternative cost or CMC
+  4: "_a_ // _face_", // alternative cost or CMC from other face
 };
 
 const ptEnum = {
-  1: "p/t", // regular
-  2: "p/t p/t", // regular, alternative cast/transformed
-  3: "p/t p/t p/t", // regular, leveled, leveled
+  1: "_p/t_", // regular
+  2: "_p/t_ _q/u_", // regular, alternative cast/transformed
+  3: "_p/t_ _q/u_ _r/v_", // regular, leveled, leveled
 };
 
 const sideEnum = {
-  1: "1", // regular naming
-  2: "a // b", // regular & alternative/flipped naming
+  1: "_a_", // regular naming
+  2: "_a_ // _b_", // regular & alternative/flipped naming
   3: "acbc", // regular & transformed meld naming
+};
+
+export const modelEnums = {
+  cmc: cmcEnum,
+  pt: ptEnum,
+  side: sideEnum,
 };
 
 const typeCreater = (
@@ -67,6 +73,13 @@ export const cardTypes = [
   { transform: typeTransform },
   { default: typeRegular },
 ];
+
+export const getTypeFromLayout = (layout) => {
+  if (Object.keys(cardTypes).includes(layout)) {
+    return cardTypes[layout];
+  }
+  return cardTypes["default"];
+};
 
 export const preType = ["Legendary", "Artifact", "Enchantment"];
 
