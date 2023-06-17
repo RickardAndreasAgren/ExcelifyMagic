@@ -1,5 +1,6 @@
 import Sortkeeper from "./sortkeeper.js";
 import { logui } from "../util/printui.js";
+import { preType, cardTypes, combos, threebos, fourbos } from "model/models.js";
 //import allsets from "../data/allsets.json";
 import pioneermeta from "../data/pioneermeta.json";
 import pioneersets from "../data/pioneercards.json";
@@ -9,8 +10,6 @@ const allsets = {};
 /* global Excel */
 
 var pioneer = {};
-
-const preType = ["Legendary", "Artifact", "Enchantment"];
 
 var primaryKeeper;
 var secondaryKeeper;
@@ -57,7 +56,7 @@ export async function initKeepers() {
 
 export function getSetData(set, format) {
   if (format == "pioneer") {
-    if(!Object.keys(pioneer.data).includes(set)) {
+    if (!Object.keys(pioneer.data).includes(set)) {
       logui(`${set} missing in data.`);
     }
     return pioneer.data[set];
@@ -143,19 +142,6 @@ export async function sortOptionsUpdate(option, add) {
 
 export function normalizeColour(colour) {
   const lt = colour.length;
-  const combos = ["BG", "BR", "GR", "GU", "RU", "RW", "UW", "UB", "WB", "WG"];
-  const threebos = [
-    "BGR",
-    "BGU",
-    "GRU",
-    "GRW",
-    "RUW",
-    "RUB",
-    "UWB",
-    "UWG",
-    "WBG",
-    "WBR",
-  ];
 
   let regex = new RegExp(`[${colour}]{${lt}}`, "g");
 
@@ -163,6 +149,8 @@ export function normalizeColour(colour) {
     return combos.find((element) => element.match(regex));
   } else if (lt == 3) {
     return threebos.find((element) => element.match(regex));
+  } else if (lt == 4) {
+    return fourbos.find((element) => element.match(regex));
   }
 }
 
@@ -281,6 +269,7 @@ const CARDOPTIONS = {
 export function setupCard(cardinfo, useOptions, setname, bside) {
   // colour ?
   cardinfo["bside"] = bside;
+
   return new Promise((resolve) => {
     let cardAsArray = [];
     for (let opt = 0; opt < useOptions.length; opt++) {
@@ -297,25 +286,42 @@ const BLOCKEDLAYOUTS = ["MELD"];
 export function setupCardSet(cards, setData, setupArray) {
   var bsides = [];
   var cardsList = [];
-  logui('Filtering out b-sides.');
+  logui("Filtering out b-sides.");
+  /*
+    Find bsides
+    ? Are all parts of Meld, layout Meld, or just backsides?
+      Move bsides to seperate list
+        ?Are split cards covered (Are technically not 2-faced, but might be in data)
+      Move main cards to cardsList
+
+      setupCard will need its sibling
+        ?otherFaceIds covers all?
+  */
+
   cards.forEach((card) => {
     if (!!card.side && card.side.toUpperCase() !== "A") {
       bsides.push(card);
       return;
     }
+    // VALIDATE THAT THIS DOESNT DROP ALL MELD CARDS
     if (!!card.layout && BLOCKEDLAYOUTS.includes(card.layout.toUpperCase())) {
       return;
     }
     cardsList.push(card);
   });
-  logui('Adapting card data for excelifymagic.');
+
+  logui("Adapting card data for excelifymagic.");
   cardsList.forEach((card) => {
     const bside = bsides.find((bcard) => {
-      if(!Object.keys(card).includes("otherFaceIds") || card.otherFaceIds.length < 1) return false;
+      if (
+        !Object.keys(card).includes("otherFaceIds") ||
+        card.otherFaceIds.length < 1
+      )
+        return false;
       bcard.uuid === card.otherFaceIds[0];
     });
     setupArray.push(setupCard(card, setData.props, setData.set.name, bside));
   });
-  logui('setupCardSet complete');
+  logui("setupCardSet complete");
   return setupArray;
 }
