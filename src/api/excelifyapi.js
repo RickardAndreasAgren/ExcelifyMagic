@@ -163,6 +163,8 @@ function getColour(cardinfo) {
   const bside = cardinfo.bside ? "//" + getColour(cardinfo.bside) : "";
   let regex = /(?=[^X])[A-Z]\/*[A-Z]*|[a-z]\/*[a-z]*/g;
   let colour = "";
+  logui(bside);
+  logui(cardinfo.manaCost);
   if (!cardinfo.manaCost) {
     return "C" + bside;
   }
@@ -202,6 +204,16 @@ function extractProp(prop, info) {
 
 const CARDOPTIONS = {
   cbname: (cardinfo) => {
+    if (cardinfo.typeFormat) {
+      logui(`${cardinfo.typeFormat}`);
+      if (cardinfo.typeFormat.formatName) {
+        logui(`${cardinfo.typeFormat.formatName}`);
+      }
+    } else {
+      logui("===NO TYPEFORMAT===");
+      logui(`${JSON.stringify(cardinfo)}`);
+      logui("=========");
+    }
     return cardinfo.typeFormat.formatName(cardinfo);
   },
   cbnumber: (cardinfo) => {
@@ -225,9 +237,9 @@ const CARDOPTIONS = {
 
 export function setupCard(cardinfo, useOptions, setname, bside) {
   cardinfo["bside"] = bside;
-  cardinfo.typeFormat = getTypeFromLayout(cardinfo.layout);
   return new Promise((resolve) => {
     let cardAsArray = [];
+    cardinfo.typeFormat = getTypeFromLayout(cardinfo.layout, cardinfo);
     for (let opt = 0; opt < useOptions.length; opt++) {
       cardAsArray.push(CARDOPTIONS[useOptions[opt]](cardinfo));
     }
@@ -246,6 +258,8 @@ export function setupCardSet(cards, setData, setupArray) {
 
   cards.forEach((card) => {
     if (!!card.side && card.side.toUpperCase() !== "A") {
+      logui(`B-saving ${card.name}`);
+      logui(`${card}`);
       bsides.push(card);
       return;
     }
@@ -257,17 +271,26 @@ export function setupCardSet(cards, setData, setupArray) {
   });
 
   logui("Adapting card data for excelifymagic.");
+  logui(`using ${setData.props}`);
   cardsList.forEach((card) => {
     const bside = bsides.find((bcard) => {
       if (
-        !Object.keys(card).includes("otherFaceIds") ||
-        card.otherFaceIds.length < 1
-      )
+        !Object.keys(bcard).includes("otherFaceIds") ||
+        bcard.otherFaceIds.length < 1
+      ) {
         return false;
-      bcard.uuid === card.otherFaceIds[0];
+      }
+      const faceId =
+        card.otherFaceIds && card.otherFaceIds.length > 0
+          ? card.otherFaceIds[0]
+          : -1;
+      if (faceId === bcard.uuid) {
+        logui(`Matching ${bcard.name} with ${card.name}`);
+      }
+      return faceId === bcard.uuid;
     });
     setupArray.push(setupCard(card, setData.props, setData.set.name, bside));
   });
-  logui("setupCardSet complete");
+  logui("setupCardSet promises complete");
   return setupArray;
 }

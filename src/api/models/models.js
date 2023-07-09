@@ -1,3 +1,5 @@
+import { logui } from "../../util/printui.js";
+
 const cmcEnum = {
   1: "_a_", // regular
   2: "_a_ + _b_", // combinable cost value; Fuse
@@ -17,128 +19,13 @@ const sideEnum = {
   3: "acbc", // regular & transformed meld naming
 };
 
-export class typeFormat {
-  typeFormat(
-    name,
-    manaCostFormat = cmcEnum[1],
-    ptFormat = ptEnum[1],
-    bside = false,
-    sideFormat = sideEnum[1],
-    blockedSide = "0"
-  ) {
-    this.name = name;
-    this.manaCostFormat = manaCostFormat;
-    this.ptFormat = ptFormat;
-    this.bside = bside;
-    this.sideFormat = sideFormat;
-    this.blockedSide = blockedSide;
-  }
-
-  setBlockedSide(side) {
-    this.blockedSide = side;
-  }
-
-  formatManaCost(card) {
-    return getConvertedManaCost(card, this.manaCostFormat);
-  }
-
-  formatPt(card) {
-    return getStats(card, this.ptFormat);
-  }
-
-  formatName(card) {
-    return getName(card, this.sideFormat);
-  }
-
-  formatType(card) {
-    return getType(card);
-  }
-}
-
-function getSplitPt(card) {
-  let pt = 0;
-  if (
-    -1 <
-    card.types.findIndex((type) => {
-      type.ToLower() === "creature" || type.ToLower() === "planeswalker";
-    })
-  ) {
-    pt++;
-  }
-  if (
-    -1 <
-    card.bside.types.findIndex((type) => {
-      type.ToLower() === "creature" || type.ToLower() === "planeswalker";
-    })
-  ) {
-    pt++;
-  }
-  return pt === 2 ? ptEnum[2] : ptEnum[1];
-}
-
-const typeRegular = () => new typeFormat("normal");
-const typeAdventure = () => new typeFormat("adventure");
-const typeAftermath = () =>
-  new typeFormat("aftermath", cmcEnum[3], undefined, true);
-
-const typeClass = () => new typeFormat("class");
-const typeFlip = () => new typeFormat("flip");
-const typeFuse = (card) => {
-  new typeFormat("fuse", cmcEnum[2], getSplitPt(card), true, sideEnum[2]);
-};
-
-const typeLeveler = () => new typeFormat("leveler", undefined, ptEnum[3]);
-const typeMeld = () =>
-  new typeFormat("meld", cmcEnum[4], ptEnum[2], true, sideEnum[3]);
-
-const typePrototype = () => new typeFormat("prototype");
-const typeSaga = () => new typeFormat("saga");
-const typeSplit = (card) => {
-  if (-1 < card.keywords.findIndex((k) => k.toLower() === "fuse")) {
-    return typeFuse(card);
-  }
-  return new typeFormat(
-    "split",
-    cmcEnum[3],
-    getSplitPt(card),
-    true,
-    sideEnum[2]
-  );
-};
-const typeTransform = () => {
-  new typeFormat("transform", cmcEnum[1], ptEnum[2], true, sideEnum[2]);
-};
-
-export const cardTypes = [
-  { adventure: typeAdventure },
-  { aftermath: typeAftermath },
-  { class: typeClass },
-  { flip: typeFlip },
-  { fuse: typeFuse },
-  { leveler: typeLeveler },
-  { meld: typeMeld },
-  { normal: typeRegular },
-  { prototype: typePrototype },
-  { saga: typeSaga },
-  { split: typeSplit },
-  { transform: typeTransform },
-  { default: typeRegular },
-];
-
-export const getTypeFromLayout = (layout, card) => {
-  if (Object.keys(cardTypes).includes(layout)) {
-    return cardTypes[layout](card);
-  }
-  return cardTypes["default"]();
-};
-
 function getName(cardinfo, cardType) {
-  if (cardType === sideEnum.side[2]) {
-    return sideEnum.side[2]
+  if (cardType === sideEnum[2]) {
+    return sideEnum[2]
       .replace("_a_", cardinfo["name"])
       .replace("_b_", cardinfo.bside["name"]);
   }
-  if (cardType === sideEnum.side[3]) {
+  if (cardType === sideEnum[3]) {
     return `${cardinfo["faceName"]}//${cardinfo.bside["faceName"]}`;
   }
   return cardinfo["name"];
@@ -253,7 +140,163 @@ export const threebos = [
   "WBG",
   "WBR",
 ];
+
 export const fourbos = ["BGRU", "GRUW", "RUWB", "UWBG", "WBGR"];
+
+export class TypeFormat {
+  constructor(
+    name,
+    manaCostFormat = cmcEnum[1],
+    ptFormat = ptEnum[1],
+    bside = false,
+    sideFormat = sideEnum[1],
+    blockedSide = "0"
+  ) {
+    this.name = name;
+    this.manaCostFormat = manaCostFormat;
+    this.ptFormat = ptFormat;
+    this.bside = bside;
+    this.sideFormat = sideFormat;
+    this.blockedSide = blockedSide;
+
+    this.setBlockedSide = this.setBlockedSide.bind(this);
+    this.formatManaCost = this.formatManaCost.bind(this);
+    this.formatPt = this.formatPt.bind(this);
+    this.formatName = this.formatName.bind(this);
+    this.formatType = this.formatType.bind(this);
+  }
+
+  setBlockedSide(side) {
+    this.blockedSide = side;
+  }
+
+  formatManaCost(card) {
+    return getConvertedManaCost(card, this.manaCostFormat);
+  }
+
+  formatPt(card) {
+    return getStats(card, this.ptFormat);
+  }
+
+  formatName(card) {
+    return getName(card, this.sideFormat);
+  }
+
+  formatType(card) {
+    return getType(card);
+  }
+}
+
+function getSplitPt(card) {
+  let pt = 0;
+  if (
+    -1 <
+    card["types"].findIndex((type) => {
+      type.toLowerCase() === "creature" ||
+        type.toLowerCase() === "planeswalker";
+    })
+  ) {
+    pt++;
+  }
+  if (
+    -1 <
+    card.bside["types"].findIndex((type) => {
+      type.toLowerCase() === "creature" ||
+        type.toLowerCase() === "planeswalker";
+    })
+  ) {
+    pt++;
+  }
+  return pt === 2 ? ptEnum[2] : ptEnum[1];
+}
+
+const typeRegular = (ded) => {
+  logui("R");
+  return new TypeFormat("normal");
+};
+const typeAdventure = (ded) => {
+  logui("A");
+  return new TypeFormat("adventure");
+};
+const typeAftermath = (ded) => {
+  logui("M");
+  return new TypeFormat("aftermath", cmcEnum[3], undefined, true);
+};
+const typeClass = (ded) => {
+  logui("C");
+  return new TypeFormat("class");
+};
+const typeFlip = (ded) => {
+  logui("P");
+  return new TypeFormat("flip");
+};
+const typeFuse = (card) => {
+  logui("F");
+  return new TypeFormat(
+    "fuse",
+    cmcEnum[2],
+    getSplitPt(card),
+    true,
+    sideEnum[2]
+  );
+};
+const typeLeveler = (ded) => {
+  logui("L");
+  return new TypeFormat("leveler", undefined, ptEnum[3]);
+};
+const typeMeld = (ded) => {
+  logui("E");
+  return new TypeFormat("meld", cmcEnum[4], ptEnum[2], true, sideEnum[3]);
+};
+const typePrototype = (ded) => {
+  logui("P");
+  return new TypeFormat("prototype");
+};
+const typeSaga = (ded) => {
+  logui("S");
+  return new TypeFormat("saga");
+};
+const typeSplit = (card) => {
+  logui("T");
+  if (-1 < card.keywords.findIndex((k) => k.toLowerCase() === "fuse")) {
+    return typeFuse(card);
+  }
+  return new TypeFormat(
+    "split",
+    cmcEnum[3],
+    getSplitPt(card),
+    true,
+    sideEnum[2]
+  );
+};
+const typeTransform = () => {
+  logui("A");
+  return new TypeFormat("transform", cmcEnum[1], ptEnum[2], true, sideEnum[2]);
+};
+
+export const cardTypes = {
+  adventure: typeAdventure,
+  aftermath: typeAftermath,
+  class: typeClass,
+  flip: typeFlip,
+  fuse: typeFuse,
+  leveler: typeLeveler,
+  meld: typeMeld,
+  normal: typeRegular,
+  prototype: typePrototype,
+  saga: typeSaga,
+  split: typeSplit,
+  transform: typeTransform,
+  default: typeRegular,
+};
+
+export const getTypeFromLayout = (layout, card) => {
+  if (Object.keys(cardTypes).includes(layout)) {
+    logui(`Selected formatter for ${layout}`);
+    return cardTypes[layout](card);
+  }
+  return cardTypes["default"](card);
+};
 
 export default {
   getTypeFromLayout,
