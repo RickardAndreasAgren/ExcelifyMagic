@@ -8,9 +8,9 @@ const cmcEnum = {
 };
 
 const ptEnum = {
-  1: "_p/t_", // regular
-  2: "_p/t_ _q/u_", // regular, alternative cast/transformed
-  3: "_p/t_ _q/u_ _r/v_", // regular, leveled, leveled
+  1: " _p/t_", // regular
+  2: " _p/t_ _q/u_", // regular, alternative cast/transformed
+  3: " _p/t_ _q/u_ _r/v_", // regular, leveled, leveled
 };
 
 const sideEnum = {
@@ -22,8 +22,8 @@ const sideEnum = {
 function getName(cardinfo, cardType) {
   if (cardType === sideEnum[2]) {
     return sideEnum[2]
-      .replace("_a_", cardinfo["name"])
-      .replace("_b_", cardinfo.bside["name"]);
+      .replace("_a_", cardinfo["faceName"])
+      .replace("_b_", cardinfo.bside["faceName"]);
   }
   if (cardType === sideEnum[3]) {
     return `${cardinfo["faceName"]}//${cardinfo.bside["faceName"]}`;
@@ -31,10 +31,76 @@ function getName(cardinfo, cardType) {
   return cardinfo["name"];
 }
 
-function getConvertedManaCost(cardinfo, cardType) {
+function getConvertedManaCost(cardinfo, cardType, isFace = false) {
   const bside = cardinfo.bside
-    ? getConvertedManaCost(cardinfo.bside, false)
+    ? getConvertedManaCost(cardinfo.bside, false, true)
     : "";
+
+  const usedValue =
+    isFace || (bside && (bside.length > 0 || bside > 0))
+      ? cardinfo["faceManaValue"]
+      : cardinfo["manaValue"];
+  if (cardType === cmcEnum[2]) {
+    let cost = cmcEnum[2].replace("_a_", usedValue).replace("_b_", bside);
+    return bside && (bside.length > 0 || bside > 0)
+      ? cost
+      : cost.replace(" + ", "");
+  }
+  if (cardType === cmcEnum[3]) {
+    let cost = cmcEnum[3].replace("_a_", usedValue).replace("_b_", bside);
+    return bside && (bside.length > 0 || bside > 0)
+      ? cost
+      : cost.replace(" // ", "");
+  }
+  if (cardType === cmcEnum[4]) {
+    let cost = cmcEnum[4].replace("_a_", usedValue).replace("_face_", bside);
+    return bside && (bside.length > 0 || bside > 0)
+      ? cost
+      : cost.replace(" // ", "");
+  }
+  return usedValue;
+}
+
+export function normalizeColour(colour) {
+  const lt = colour.length;
+
+  let regex = new RegExp(`[${colour}]{${lt}}`, "g");
+
+  if (lt == 2) {
+    return combos.find((element) => element.match(regex));
+  } else if (lt == 3) {
+    return threebos.find((element) => element.match(regex));
+  } else if (lt == 4) {
+    return fourbos.find((element) => element.match(regex));
+  }
+}
+
+function getColour(cardinfo) {
+  const bside = cardinfo.bside ? "//" + getColour(cardinfo.bside) : "";
+  let regex = /(?=[^X])[A-Z]\/*[A-Z]*|[a-z]\/*[a-z]*/g;
+  let colour = "";
+  logui(bside);
+  logui(cardinfo.manaCost);
+  if (!cardinfo.manaCost) {
+    return "C" + bside;
+  }
+  let cArray = cardinfo.manaCost.match(regex);
+  if (cArray && cArray.length > 0) {
+    cArray.forEach((element) => {
+      colour.length > 0 ? (colour += "|") : null;
+      let toAdd =
+        element.length > 1
+          ? normalizeColour(`${element.replace("/", "")}`)
+          : element;
+      colour += `${toAdd}`;
+    });
+    if (colour[-1] == "|") {
+      colour.splice(-1, 1);
+    }
+  } else {
+    colour = "C";
+  }
+  /*
   const xses = (() => {
     let returner = "";
     const regex = /[X]/g;
@@ -46,24 +112,9 @@ function getConvertedManaCost(cardinfo, cardType) {
         xes--;
       }
     }
-  })();
+  })();*/
 
-  if (cardType === cmcEnum[2]) {
-    return cmcEnum[2]
-      .replace("_a_", xses + cardinfo["manaValue"])
-      .replace("_b_", bside);
-  }
-  if (cardType === cmcEnum[3]) {
-    return cmcEnum[3]
-      .replace("_a_", xses + cardinfo["manaValue"])
-      .replace("_b_", bside);
-  }
-  if (cardType === cmcEnum[4]) {
-    return cmcEnum[4]
-      .replace("_a_", xses + cardinfo["manaValue"])
-      .replace("_face_", bside);
-  }
-  return cardinfo["manaValue"];
+  return colour + bside;
 }
 
 function getStats(cardinfo, cardType) {
@@ -161,6 +212,7 @@ export class TypeFormat {
 
     this.setBlockedSide = this.setBlockedSide.bind(this);
     this.formatManaCost = this.formatManaCost.bind(this);
+    this.formatManaValue = this.formatManaValue.bind(this);
     this.formatPt = this.formatPt.bind(this);
     this.formatName = this.formatName.bind(this);
     this.formatType = this.formatType.bind(this);
@@ -171,6 +223,10 @@ export class TypeFormat {
   }
 
   formatManaCost(card) {
+    return getColour(card);
+  }
+
+  formatManaValue(card) {
     return getConvertedManaCost(card, this.manaCostFormat);
   }
 

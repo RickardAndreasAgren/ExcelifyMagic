@@ -6,7 +6,8 @@ import {
   buildSet,
   getSetCode,
 } from "../taskpane/taskpane.js";
-import { getSetData, normalizeColour } from "../api/excelifyapi.js";
+import { getSetData } from "../api/excelifyapi.js";
+import { normalizeColour } from "../api/models/models.js";
 
 /* global Excel */
 /* global document */
@@ -357,7 +358,9 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
     if (
       !!sheetValues[index] &&
       (element[0] == sheetValues[index][0] ||
-        element[0].replace(" ", "") == sheetValues[index][0])
+        element[0].replace(" ", "") == sheetValues[index][0] ||
+        element[0] == sheetValues[index][0].replace(" ", "") ||
+        element[0].replace(" ", "") == sheetValues[index][0].replace(" ", ""))
     ) {
       logui(`${sheetValues[index]}`);
       logui(`${element}`);
@@ -368,8 +371,11 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
       let done = false;
       while (offset + index < sheetValues.length) {
         if (
-          element[0] == sheetValues[offset + index][0] ||
-          element[0].replace(" ", "") == sheetValues[offset + index][0]
+          element[0] == sheetValues[index + offset][0] ||
+          element[0].replace(" ", "") == sheetValues[index + offset][0] ||
+          element[0] == sheetValues[index + offset][0].replace(" ", "") ||
+          element[0].replace(" ", "") ==
+            sheetValues[index + offset][0].replace(" ", "")
         ) {
           twoDimArray[index][countIndexArray] =
             sheetValues[index + offset][countIndexRange];
@@ -388,7 +394,10 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
         if (
           !!sheetValues[index - offset] &&
           (element[0] == sheetValues[index - offset][0] ||
-            element[0].replace(" ", "") == sheetValues[index - offset][0])
+            element[0].replace(" ", "") == sheetValues[index - offset][0] ||
+            element[0] == sheetValues[index - offset][0].replace(" ", "") ||
+            element[0].replace(" ", "") ==
+              sheetValues[index - offset][0].replace(" ", ""))
         ) {
           twoDimArray[index][countIndexArray] =
             sheetValues[index - offset][countIndexRange];

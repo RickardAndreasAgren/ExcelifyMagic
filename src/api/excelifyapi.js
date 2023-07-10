@@ -145,49 +145,6 @@ export async function sortOptionsUpdate(option, add) {
   return 0;
 }
 
-export function normalizeColour(colour) {
-  const lt = colour.length;
-
-  let regex = new RegExp(`[${colour}]{${lt}}`, "g");
-
-  if (lt == 2) {
-    return combos.find((element) => element.match(regex));
-  } else if (lt == 3) {
-    return threebos.find((element) => element.match(regex));
-  } else if (lt == 4) {
-    return fourbos.find((element) => element.match(regex));
-  }
-}
-
-function getColour(cardinfo) {
-  const bside = cardinfo.bside ? "//" + getColour(cardinfo.bside) : "";
-  let regex = /(?=[^X])[A-Z]\/*[A-Z]*|[a-z]\/*[a-z]*/g;
-  let colour = "";
-  logui(bside);
-  logui(cardinfo.manaCost);
-  if (!cardinfo.manaCost) {
-    return "C" + bside;
-  }
-  let cArray = cardinfo.manaCost.match(regex);
-  if (cArray && cArray.length > 0) {
-    cArray.forEach((element) => {
-      colour.length > 0 ? (colour += "|") : null;
-      let toAdd =
-        element.length > 1
-          ? normalizeColour(`${element.replace("/", "")}`)
-          : element;
-      colour += `${toAdd}`;
-    });
-    if (colour[-1] == "|") {
-      colour.splice(-1, 1);
-    }
-  } else {
-    colour = "C";
-  }
-
-  return colour + bside;
-}
-
 function getRarity(cardinfo) {
   const bside = cardinfo.bside ? "//" + getRarity(cardinfo.bside) : "";
   return (
@@ -219,9 +176,11 @@ const CARDOPTIONS = {
   cbnumber: (cardinfo) => {
     return extractProp("number", cardinfo);
   },
-  cbcolor: getColour,
-  cbcmc: (cardinfo) => {
+  cbcolor: (cardinfo) => {
     return cardinfo.typeFormat.formatManaCost(cardinfo);
+  },
+  cbcmc: (cardinfo) => {
+    return cardinfo.typeFormat.formatManaValue(cardinfo);
   },
   cbtype: (cardinfo) => {
     return cardinfo.typeFormat.formatType(cardinfo);
