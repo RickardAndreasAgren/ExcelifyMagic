@@ -138,7 +138,7 @@ function getStats(cardinfo, cardType) {
       .replace("_q/u_", TODOleveled)
       .replace("_r/v_", TODOleveled2);
   }
-  return stats;
+  return " " + stats;
 }
 
 function getType(cardinfo) {
@@ -348,7 +348,6 @@ export const cardTypes = {
 
 export const getTypeFromLayout = (layout, card) => {
   if (Object.keys(cardTypes).includes(layout)) {
-    logui(`Selected formatter for ${layout}`);
     return cardTypes[layout](card);
   }
   return cardTypes["default"](card);

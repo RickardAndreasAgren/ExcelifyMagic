@@ -162,10 +162,7 @@ function extractProp(prop, info) {
 const CARDOPTIONS = {
   cbname: (cardinfo) => {
     if (cardinfo.typeFormat) {
-      logui(`${cardinfo.typeFormat}`);
-      if (cardinfo.typeFormat.formatName) {
-        logui(`${cardinfo.typeFormat.formatName}`);
-      }
+      // logui(`${cardinfo.typeFormat}`);
     } else {
       logui("===NO TYPEFORMAT===");
       logui(`${JSON.stringify(cardinfo)}`);

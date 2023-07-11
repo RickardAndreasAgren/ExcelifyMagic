@@ -352,63 +352,59 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
   /*
 
   */
-  let offset = 1;
+
   twoDimArray.forEach((element, index) => {
+    let offset = 1;
     logui(`Checking ${index}`);
     if (
-      !!sheetValues[index] &&
+      sheetValues[index] &&
       (element[0] == sheetValues[index][0] ||
-        element[0].replace(" ", "") == sheetValues[index][0] ||
-        element[0] == sheetValues[index][0].replace(" ", "") ||
-        element[0].replace(" ", "") == sheetValues[index][0].replace(" ", ""))
+        element[0].replaceAll(" ", "") == sheetValues[index][0] ||
+        element[0] == sheetValues[index][0].replaceAll(" ", "") ||
+        element[0].replaceAll(" ", "") ==
+          sheetValues[index][0].replaceAll(" ", ""))
     ) {
       logui(`${sheetValues[index]}`);
       logui(`${element}`);
       twoDimArray[index][countIndexArray] = sheetValues[index][countIndexRange];
     } else {
       logui(`${element} not matched`);
-      logui(`Was compared to ${sheetValues[index]}, proceeding search forward`);
-      let done = false;
+      logui(
+        `Was compared to ${sheetValues[index]}, proceeding search forward at ${
+          index + offset
+        }`
+      );
       while (offset + index < sheetValues.length) {
         if (
           element[0] == sheetValues[index + offset][0] ||
-          element[0].replace(" ", "") == sheetValues[index + offset][0] ||
-          element[0] == sheetValues[index + offset][0].replace(" ", "") ||
-          element[0].replace(" ", "") ==
-            sheetValues[index + offset][0].replace(" ", "")
+          element[0].replaceAll(" ", "") == sheetValues[index + offset][0] ||
+          element[0] == sheetValues[index + offset][0].replaceAll(" ", "") ||
+          element[0].replaceAll(" ", "") ==
+            sheetValues[index + offset][0].replaceAll(" ", "")
         ) {
           twoDimArray[index][countIndexArray] =
             sheetValues[index + offset][countIndexRange];
-          done = true;
-          logui(`Hit!`);
-          break;
+          logui(`Hit at ${index + offset}`);
+          return;
         }
         offset++;
       }
-      if (done) {
-        return;
-      }
-      offset = 0;
-      logui(`Searching backwards`);
-      while (index - offset > 0) {
+      offset = index > sheetValues.length ? 1 + index - sheetValues.length : 1;
+      logui(`Searching backwards starting ${index - offset}`);
+      while (index - offset > 1) {
         if (
-          !!sheetValues[index - offset] &&
-          (element[0] == sheetValues[index - offset][0] ||
-            element[0].replace(" ", "") == sheetValues[index - offset][0] ||
-            element[0] == sheetValues[index - offset][0].replace(" ", "") ||
-            element[0].replace(" ", "") ==
-              sheetValues[index - offset][0].replace(" ", ""))
+          element[0] == sheetValues[index - offset][0] ||
+          element[0].replaceAll(" ", "") == sheetValues[index - offset][0] ||
+          element[0] == sheetValues[index - offset][0].replaceAll(" ", "") ||
+          element[0].replaceAll(" ", "") ==
+            sheetValues[index - offset][0].replaceAll(" ", "")
         ) {
           twoDimArray[index][countIndexArray] =
             sheetValues[index - offset][countIndexRange];
-          done = true;
-          logui(`Hit!`);
-          break;
+          logui(`Hit at ${index - offset}`);
+          return;
         }
         offset++;
-      }
-      if (done) {
-        return;
       }
       logui(`Leaving at 0`);
       twoDimArray[index][countIndexArray] = "0";
