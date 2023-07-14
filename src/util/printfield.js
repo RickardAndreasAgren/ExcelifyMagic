@@ -6,6 +6,7 @@ import {
   buildSet,
   getSetCode,
 } from "../taskpane/taskpane.js";
+import { threeSort } from "../api/sorttypes.js";
 import { getSetData } from "../api/excelifyapi.js";
 import { normalizeColour } from "../api/models/models.js";
 
@@ -293,6 +294,10 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
   }
   let pSort = sorters.pst ? sorters.pst : false;
   let sSort = sorters.sst ? sorters.sst : false;
+  let sortNames = {
+    p: sorters.pname ? sorters.pname : false,
+    s: sorters.sname ? sorters.sname : false,
+  }
   let countIndexArray = headers.length - 1;
   let expansionIndexArray = countIndexArray - 1;
   let countIndexRange = sheetValues[0].length - 1;
@@ -310,48 +315,23 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
     } columns`
   );
 
-  const threeSort = (a, b) => {
-    if (a[expansionIndex] < b[expansionIndex]) {
-      return -1;
-    }
-    if (a[expansionIndex] > b[expansionIndex]) {
-      return 1;
-    }
-
-    if (pSort && !!a[pSort] && !!b[pSort]) {
-      if (a[pSort] < b[pSort]) {
-        return -1;
-      }
-      if (a[pSort] > b[pSort]) {
-        return 1;
-      }
-    }
-    if (sSort && !!a[sSort] && !!b[sSort]) {
-      if (a[sSort] < b[sSort]) {
-        return -1;
-      }
-      if (a[sSort] > b[sSort]) {
-        return 1;
-      }
-    }
-    return 0;
-  };
   logui("Sorting setups complete");
 
   // add expansion sort
   logui("Sorting sheet values");
   expansionIndex = expansionIndexRange;
   sheetValues = await ensureColours(sheetValues, sheetHeaders);
-  sheetValues.sort(threeSort);
+  sheetValues.sort((a, b) => {
+    return threeSort(a, b, pSort, sSort, expansionIndex, sortNames);
+  });
 
   logui("Sorting value array");
   expansionIndex = expansionIndexArray;
-  twoDimArray.sort(threeSort);
+  twoDimArray.sort((a, b) => {
+    return threeSort(a, b, pSort, sSort, expansionIndex, sortNames);
+  });
 
   logui("Saving count values");
-  /*
-
-  */
 
   twoDimArray.forEach((element, index) => {
     let offset = 1;

@@ -1,11 +1,6 @@
 import Sortkeeper from "./sortkeeper.js";
 import { logui } from "../util/printui.js";
-import {
-  getTypeFromLayout,
-  combos,
-  threebos,
-  fourbos,
-} from "./models/models.js";
+import { getTypeFromLayout } from "./models/models.js";
 //import allsets from "../data/allsets.json";
 import pioneermeta from "../data/pioneermeta.json";
 import pioneersets from "../data/pioneercards.json";
@@ -143,6 +138,16 @@ export async function sortOptionsUpdate(option, add) {
     }
   }
   return 0;
+}
+
+export async function getSelectedProps(selectedFields) {
+  let activeProps = [];
+  for (let i in selectedFields) {
+    if (selectedFields[i]) {
+      activeProps.push(i);
+    }
+  }
+  return activeProps;
 }
 
 function getRarity(cardinfo) {

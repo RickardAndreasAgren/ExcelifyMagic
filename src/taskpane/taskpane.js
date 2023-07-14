@@ -19,6 +19,7 @@ import {
   getSetName,
   setupCardSet,
   getWorkbooknames,
+  getSelectedProps,
 } from "../api/excelifyapi.js";
 
 var format = "pioneer";
@@ -70,6 +71,7 @@ function startApp() {
   document.getElementById("app-body").style.display = "flex";
   document.getElementById("buildset").onclick = renderSetCards;
   document.getElementById("formatselector").onclick = selectFormat;
+  document.getElementById("coloursort").onclick = runColourSort;
 
   setOptions(format)
     .then((setList) => {
@@ -156,22 +158,12 @@ function startApp() {
 Define functions to be used by triggers
 ***************************/
 
-async function getSelectedProps() {
-  let activeProps = [];
-  for (let i in selectedFields) {
-    if (selectedFields[i]) {
-      activeProps.push(i);
-    }
-  }
-  return activeProps;
-}
-
 export async function buildSet(setCode = null) {
   setCode ? logui(`Got ${setCode} for build set.`) : null;
   let setlist = document.getElementById("setselector");
   let activeSet = setCode ? setCode : setlist[setlist.selectedIndex].value;
   let name = getSetName(activeSet, format);
-  return await getSelectedProps().then((props) => {
+  return await getSelectedProps(selectedFields).then((props) => {
     return { set: activeSet, name: name, props: props };
   });
 }
@@ -183,6 +175,13 @@ export async function selectFormat() {
   } else if (formatChoice.value == "all") {
     format = "all";
   }
+}
+
+function runColourSort() {
+  // get the active range, see printfield
+  // emulate psort = cbcolor
+  // run threesort
+  // paste back
 }
 
 function setRows() {
@@ -225,7 +224,7 @@ export async function renderSetCards() {
     .then((cardArray) => {
       logui("Sorting complete");
       try {
-        return getSelectedProps().then((props) => {
+        return getSelectedProps(selectedFields).then((props) => {
           let headers = [];
           props.forEach((prop) => {
             headers.push(optionText[prop]);
@@ -292,7 +291,7 @@ export async function prepareSet(setData) {
       let sSort = false;
       return new Promise((resolve) => {
         logui("---------------------setup complete");
-        resolve(getSelectedProps());
+        resolve(getSelectedProps(selectedFields));
       })
         .then((props) => {
           logui("Sorting next. Options are:");
@@ -345,12 +344,14 @@ export async function prepareSet(setData) {
 }
 
 export async function getSortPriorities() {
-  let props = await getSelectedProps();
+  let props = await getSelectedProps(selectedFields);
   let pSort = null;
   let sSort = null;
+  let pVal = null;
+  let sVal = null;
   logui(document.getElementById("psortactive").checked);
   if (document.getElementById("psortactive").checked) {
-    let pVal = document.getElementById("primarysort").value;
+    pVal = document.getElementById("primarysort").value;
     logui(pVal);
     pSort = props.indexOf(pVal);
     logui(pSort);
@@ -359,12 +360,12 @@ export async function getSortPriorities() {
   logui("Secondary sort is: ");
   logui(document.getElementById("ssortactive").checked);
   if (document.getElementById("ssortactive").checked) {
-    let sVal = document.getElementById("secondarysort").value;
+    sVal = document.getElementById("secondarysort").value;
     logui(sVal);
     sSort = props.indexOf(sVal);
     logui(sSort);
   }
-  return { pst: pSort, sst: sSort };
+  return { pst: pSort, sst: sSort, pname: pVal, sname: sVal };
 }
 
 export function getSetCode(name) {
@@ -379,12 +380,3 @@ export function getSetCode(name) {
   logui(`Divulged ${setCode}`);
   return setCode;
 }
-
-/*
-async function getSelectedPropsHTML() {
-  let stringed = "";
-  for (let i in selectedFields) {
-    stringed += optionText[i] + ":" + selectedFields[i] + ", <br/>";
-  }
-  return stringed;
-}*/
