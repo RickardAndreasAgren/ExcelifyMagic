@@ -198,7 +198,7 @@ async function validSelection(selectedRange, arraySizeX, arraySizeY) {
   }
 }
 
-async function clearRange(context, rangeBusy) {
+export async function clearRange(context, rangeBusy) {
   if (rangeBusy) {
     logui(`range is ${rangeBusy.toString()}`);
     rangeBusy.clear();
@@ -396,7 +396,7 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
   return twoDimArray;
 }
 
-async function ensureColours(sheetValues, sheetHeaders) {
+export async function ensureColours(sheetValues, sheetHeaders) {
   const colourIndex = sheetHeaders.findIndex(
     (element) => element == "Colour" || element == "Color"
   );

@@ -7,7 +7,8 @@
 /* global Office document Excel */
 
 import { printcell } from "../util/printcell.js";
-import { printfield } from "../util/printfield.js";
+import { printfield, clearRange, ensureColours } from "../util/printfield.js";
+import { numberToLetters } from "../util/columnconverter.js";
 import { printerror } from "../util/printui.js";
 import { logui } from "../util/printui.js";
 import optionText from "../api/optionText.js";
@@ -21,6 +22,7 @@ import {
   getWorkbooknames,
   getSelectedProps,
 } from "../api/excelifyapi.js";
+import { threeSort } from "../api/sorttypes.js";
 
 var format = "pioneer";
 
@@ -177,11 +179,55 @@ export async function selectFormat() {
   }
 }
 
-function runColourSort() {
-  // get the active range, see printfield
-  // emulate psort = cbcolor
-  // run threesort
-  // paste back
+async function runColourSort() {
+  await Excel.run(async (context) => {
+    var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
+
+    var range = currentWorksheet.getUsedRange();
+    range.load([
+      "values",
+      "columnIndex",
+      "rowIndex",
+      "columnCount",
+      "rowCount",]);
+    await context.sync();
+
+    let sheetValues = range.values;
+    let headers = sheetValues.shift();
+    let sorters = {
+      pst: headers.indexOf("Colour"),
+      sst: headers.indexOf("Name"),
+      pname: "cbcolor",
+      sname: "cbname",
+    };
+    let pSort = sorters.pst ? sorters.pst : false;
+    let sSort = sorters.sst ? sorters.sst : false;
+    let sortNames = {
+      p: sorters.pname ? sorters.pname : false,
+      s: sorters.sname ? sorters.sname : false,
+    };
+    let countIndexArray = headers.length - 1;
+    let expansionIndexArray = countIndexArray - 1;
+    let expansionIndex = expansionIndexArray;
+
+    sheetValues = await ensureColours(sheetValues, headers);
+    sheetValues.sort((a, b) => {
+      return threeSort(a, b, pSort, sSort, expansionIndex, sortNames);
+    });
+    sheetValues.splice(0, 0, headers);
+
+    let yTarget = sheetValues.length;
+    let xTarget = await numberToLetters(sheetValues[0].length - 1);
+    let rangeString = "A1:" + xTarget + yTarget;
+    await clearRange(context, range);
+
+    range = currentWorksheet.getRange(rangeString);
+    range.load(["values", "columnCount"]);
+    await context.sync();
+
+    range.values = sheetValues;
+    await context.sync();
+  });
 }
 
 function setRows() {
