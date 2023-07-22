@@ -86,40 +86,41 @@ function getColour(cardinfo) {
   if (!cardinfo.manaCost) {
     return "C" + bside;
   }
-
-  // use normalized inner colour:
-  //    save hybrids with position, replace with mono
-  // normalize entire colour
-  //    replace temporary monos with saved
   let cArray = cardinfo.manaCost.match(regex);
+
   if (cArray && cArray.length > 0) {
+    let storedColor = [];
     cArray.forEach((element) => {
-      colour.length > 0 ? (colour += "|") : null;
       let toAdd =
         element.length > 1
           ? normalizeColour(`${element.replaceAll("/", "")}`)
           : element;
-      colour += `${toAdd}`;
+      if (toAdd.length > 1) {
+        storedColor.push({ to: toAdd[0], from: toAdd });
+        colour += `${toAdd[0]}`;
+      } else {
+        colour += toAdd;
+      }
     });
-    if (colour[-1] == "|") {
-      colour = colour.substring(0, colour.length);
+    let normalized = normalizeColour(colour) ?? colour;
+    logui(`${cArray} into ${colour} normalized as ${normalized}`);
+
+    if (storedColor.length > 0) {
+      let nArray = normalized.split("");
+      for (let i = 0; i < storedColor.length; i++) {
+        let inverted = storedColor.length - 1 - i;
+        nArray[nArray.indexOf(storedColor[inverted].to)] =
+          storedColor[inverted].from;
+      }
+      normalized = nArray.join("|");
+    } else {
+      let tempSplit = normalized.split("");
+      normalized = tempSplit.join("|");
     }
+    colour = normalized;
   } else {
     colour = "C";
   }
-  /*
-  const xses = (() => {
-    let returner = "";
-    const regex = /[X]/g;
-    const hits = cardinfo.manaCost ? cardinfo.manaCost.match(regex) : false;
-    if (!!hits && hits.length > 0) {
-      var xes = hits.length;
-      while (xes > 0) {
-        returner = returner + "X";
-        xes--;
-      }
-    }
-  })();*/
 
   return colour + bside;
 }

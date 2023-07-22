@@ -21,26 +21,9 @@ function isMono(colorArray) {
   return true;
 }
 
-/*
-  U
-  U|B
-  U|U
-  U|U|B|B
-  U|U|U|U
-  
-  U
-  U|U
-  U|U|U|U
-  U|B
-  U|U|B|B
-
-  ?List-based?
-  ?Upgrades?
-  ?ensure mono order?
-*/
 function colourSort(a, b, key) {
   let print = false;
-  if (a[key] === "R|R" || a[key] === "RR" || a[key] === "{R}{R}") {
+  if (false) { //a[key] === "R|R" || a[key] === "RR" || a[key] === "{R}{R}") {
     print = true;
     logui(`Sorting a ${a[0]} against b ${b[0]}`);
   }
@@ -49,8 +32,6 @@ function colourSort(a, b, key) {
   const aL = sA.length;
   const bL = sB.length;
   const len = aL > bL ? bL : aL;
-  let monoA = isMono(sA);
-  let monoB = isMono(sB);
 
   for (let i = 0; i < len; i++) {
     if (print) logui(`FOR-L ${i}`);
