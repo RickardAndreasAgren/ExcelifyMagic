@@ -63,6 +63,8 @@ function getConvertedManaCost(cardinfo, cardType, isFace = false) {
 
 export function normalizeColour(colour) {
   const lt = colour.length;
+  // scrub "|"
+  // ? how hybridmana?
 
   let regex = new RegExp(`[${colour}]{${lt}}`, "g");
 
@@ -73,29 +75,34 @@ export function normalizeColour(colour) {
   } else if (lt == 4) {
     return fourbos.find((element) => element.match(regex));
   }
+  return colour;
 }
 
 function getColour(cardinfo) {
   const bside = cardinfo.bside ? "//" + getColour(cardinfo.bside) : "";
   let regex = /(?=[^X])[A-Z]\/*[A-Z]*|[a-z]\/*[a-z]*/g;
   let colour = "";
-  logui(bside);
   logui(cardinfo.manaCost);
   if (!cardinfo.manaCost) {
     return "C" + bside;
   }
+
+  // use normalized inner colour:
+  //    save hybrids with position, replace with mono
+  // normalize entire colour
+  //    replace temporary monos with saved
   let cArray = cardinfo.manaCost.match(regex);
   if (cArray && cArray.length > 0) {
     cArray.forEach((element) => {
       colour.length > 0 ? (colour += "|") : null;
       let toAdd =
         element.length > 1
-          ? normalizeColour(`${element.replace("/", "")}`)
+          ? normalizeColour(`${element.replaceAll("/", "")}`)
           : element;
       colour += `${toAdd}`;
     });
     if (colour[-1] == "|") {
-      colour.splice(-1, 1);
+      colour = colour.substring(0, colour.length);
     }
   } else {
     colour = "C";

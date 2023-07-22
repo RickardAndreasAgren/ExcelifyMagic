@@ -10,45 +10,90 @@ function standardSort(a, b, key) {
   }
 }
 
+function isMono(colorArray) {
+  if (colorArray.length == 1) return true;
+  let first = colorArray[0];
+  for (let m = 1; m < colorArray.length; m++) {
+    if (first != colorArray[m]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/*
+  U
+  U|B
+  U|U
+  U|U|B|B
+  U|U|U|U
+  
+  U
+  U|U
+  U|U|U|U
+  U|B
+  U|U|B|B
+
+  ?List-based?
+  ?Upgrades?
+  ?ensure mono order?
+*/
 function colourSort(a, b, key) {
+  let print = false;
+  if (a[key] === "R|R" || a[key] === "RR" || a[key] === "{R}{R}") {
+    print = true;
+    logui(`Sorting a ${a[0]} against b ${b[0]}`);
+  }
   const sA = a[key].split("|");
   const sB = b[key].split("|");
-  const len = sA.length > sB.length ? sB.length : sA.length;
+  const aL = sA.length;
+  const bL = sB.length;
+  const len = aL > bL ? bL : aL;
+  let monoA = isMono(sA);
+  let monoB = isMono(sB);
 
   for (let i = 0; i < len; i++) {
+    if (print) logui(`FOR-L ${i}`);
     let cA = sA[i];
     let cB = sB[i];
-    const innerlen = cA.length > cB.length ? cB.length : cA.length;
-    for (let k = 0; k < innerlen; k++) {
-      let kA = cA[k];
-      let kB = cB[k];
 
-      if (kA < kB) {
+    if (i > 0) {
+      if (sA[0] == cA && cB !== cA) {
+        if (print) logui("sA[0] == cA && cB !== cA -1");
         return -1;
       }
-      if (kA > kB) {
+      if (sB[0] == cB && cA !== cB) {
+        if (print) logui("sB[0] == cB && cA !== cB 1");
+        return 1;
+      }
+      if (cA.length < cB.length && cA[0] === cB[0]) {
+        if (print) logui("cA.length < cB.length -1");
+        return -1;
+      }
+      if (cA.length > cB.length && cA[0] === cB[0]) {
+        if (print) logui("cA.length > cB.length 1");
         return 1;
       }
     }
-    if (cA.length < cB.length) {
-      return -1;
-    }
-    if (cA.length > cB.length) {
-      return 1;
-    }
     if (cA < cB) {
+      if (print) logui("cA < cB -1");
       return -1;
     }
     if (cA > cB) {
+      if (print) logui("cA > cB 1");
       return 1;
     }
   }
-  if (sA.length < sB.length) {
+
+  if (aL < bL) {
+    if (print) logui("aL < bL -1");
     return -1;
   }
-  if (sA.length > sB.length) {
+  if (aL > bL) {
+    if (print) logui("aL > bL 1");
     return 1;
   }
+  if (print) logui("made 0");
   return 0;
 }
 
@@ -76,9 +121,13 @@ export const threeSort = function (
   }
 
   if (pSort && !!a[pSort] && !!b[pSort]) {
+    // logui(`Running sorter ${pSort}`);
+    // logui(`by selector ${chosenSorts.p}`);
     return selectSort(a, b, pSort, chosenSorts.p);
   }
   if (sSort && !!a[sSort] && !!b[sSort]) {
+    // logui(`Running sorter ${sSort}`);
+    // logui(`by selector ${chosenSorts.s}`);
     return selectSort(a, b, sSort, chosenSorts.s);
   }
   return 0;
