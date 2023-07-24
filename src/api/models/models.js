@@ -9,7 +9,7 @@ const cmcEnum = {
 
 const ptEnum = {
   1: " _p/t_", // regular
-  2: " _p/t_ _q/u_", // regular, alternative cast/transformed
+  2: " _p/t_ // _q/u_", // regular, alternative cast/transformed
   3: " _p/t_ _q/u_ _r/v_", // regular, leveled, leveled
 };
 
@@ -82,11 +82,14 @@ function getColour(cardinfo) {
   const bside = cardinfo.bside ? "//" + getColour(cardinfo.bside) : "";
   let regex = /(?=[^X])[A-Z]\/*[A-Z]*|[a-z]\/*[a-z]*/g;
   let colour = "";
-  logui(cardinfo.manaCost);
-  if (!cardinfo.manaCost) {
+  let cArray = [];
+  if (cardinfo.manaCost) {
+    cArray = cardinfo.manaCost.match(regex);
+  } else if (cardinfo.colorIndicator && cardinfo.colorIndicator.length > 0) {
+    cArray = cardinfo.colorIndicator.join("").match(regex);
+  } else {
     return "C" + bside;
   }
-  let cArray = cardinfo.manaCost.match(regex);
 
   if (cArray && cArray.length > 0) {
     let storedColor = [];
@@ -132,10 +135,12 @@ function getStats(cardinfo, cardType) {
     stats = cardinfo.loyalty;
   } else if (cardinfo.types.includes("Creature")) {
     stats = cardinfo.power + "/" + cardinfo.toughness;
+  } else {
+    stats = "-";
   }
 
   if (cardType === ptEnum[2]) {
-    return ptEnum[2].replace("_p/t_", stats).replace("_r/u_", bside);
+    return ptEnum[2].replace("_p/t_", stats).replace("_q/u_", bside);
   }
 
   if (cardType === ptEnum[3]) {

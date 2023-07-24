@@ -218,16 +218,17 @@ export function setupCardSet(cards, setData, setupArray) {
   logui("Filtering out b-sides.");
 
   cards.forEach((card) => {
-    if (!!card.side && card.side.toUpperCase() !== "A") {
+    if (
+      !!card.side &&
+      card.side.toUpperCase() !== "A" &&
+      BLOCKEDLAYOUTS.includes(card.layout.toUpperCase())
+    ) {
       logui(`B-saving ${card.name}`);
       logui(`${card}`);
       bsides.push(card);
       return;
     }
-    // VALIDATE THAT THIS DOESNT DROP ALL MELD CARDS
-    if (!!card.layout && BLOCKEDLAYOUTS.includes(card.layout.toUpperCase())) {
-      return;
-    }
+    
     cardsList.push(card);
   });
 

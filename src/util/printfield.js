@@ -125,6 +125,17 @@ export async function printfield(twoDimArray, newSheet, format) {
           */
         } else {
           logui("Fallback to basic selection");
+          var usedRange = currentWorksheet.getUsedRange();
+          usedRange.load([
+            "values",
+            "columnIndex",
+            "rowIndex",
+            "columnCount",
+            "rowCount",
+          ]);
+          await context.sync();
+          let yTarget = usedRange.rowCount;
+          let xTarget = await numberToLetters(usedRange.columnCount - 1);
           rangeString = "A1:" + xTarget + yTarget;
           range = currentWorksheet.getRange(rangeString);
         }
