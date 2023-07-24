@@ -102,12 +102,14 @@ export const threeSort = function (
   if (pSort && !!a[pSort] && !!b[pSort]) {
     // logui(`Running sorter ${pSort}`);
     // logui(`by selector ${chosenSorts.p}`);
-    return selectSort(a, b, pSort, chosenSorts.p);
+    let moving = selectSort(a, b, pSort, chosenSorts.p);
+    if (moving === -1 || moving === 1) return moving;
   }
   if (sSort && !!a[sSort] && !!b[sSort]) {
     // logui(`Running sorter ${sSort}`);
     // logui(`by selector ${chosenSorts.s}`);
-    return selectSort(a, b, sSort, chosenSorts.s);
+    let moving = selectSort(a, b, sSort, chosenSorts.s);
+    if (moving === -1 || moving === 1) return moving;
   }
   return 0;
 };
