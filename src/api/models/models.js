@@ -26,7 +26,7 @@ function getName(cardinfo, cardType) {
       returner = sideEnum[2].replace("_a_", cardinfo["faceName"]);
     }
     if (cardinfo.bside && cardinfo.bside["faceName"]) {
-      returner = sideEnum[2].replace("_b_", cardinfo.bside["faceName"]);
+      returner = returner.replace("_b_", cardinfo.bside["faceName"]);
     }
     if (!returner) returner = cardinfo["name"];
     return returner;
