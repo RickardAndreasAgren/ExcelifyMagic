@@ -215,7 +215,7 @@ async function runColourSort() {
           : false,
     };
     logui(`Sort settings:`);
-    logui(`${pSort} ${sSort} ${sortNames}`);
+    logui(`${pSort} ${sSort} ${sortNames.p} ${sortNames.s}`);
     let countIndexArray = headers.length - 1;
     let expansionIndexArray = countIndexArray - 1;
     let expansionIndex = expansionIndexArray;
