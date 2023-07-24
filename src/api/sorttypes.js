@@ -8,7 +8,6 @@ function standardSort(a, b, key) {
   if (a[key] > b[key]) {
     return 1;
   }
-  return 0;
 }
 
 function isMono(colorArray) {
@@ -75,8 +74,6 @@ function colourSort(a, b, key) {
     if (print) logui("aL > bL 1");
     return 1;
   }
-  if (print) logui("made 0");
-  return 0;
 }
 
 function selectSort(a, b, key, selector) {
