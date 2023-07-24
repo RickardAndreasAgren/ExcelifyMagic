@@ -303,12 +303,20 @@ async function saveCounts(context, range, twoDimArray, arraySizeX) {
   if (sheetValues[0][0] == "Name") {
     sheetHeaders = sheetValues.shift();
   }
-  let pSort = sorters.pst ? sorters.pst : false;
-  let sSort = sorters.sst ? sorters.sst : false;
+  let pSort =
+    sorters.pst !== null || sorters.pst !== undefined ? sorters.pst : false;
+  let sSort =
+    sorters.sst !== null || sorters.sst !== undefined ? sorters.sst : false;
   let sortNames = {
-    p: sorters.pname ? sorters.pname : false,
-    s: sorters.sname ? sorters.sname : false,
-  }
+    p:
+      sorters.pname !== null || sorters.pname !== undefined
+        ? sorters.pname
+        : false,
+    s:
+      sorters.sname !== null || sorters.sname !== undefined
+        ? sorters.sname
+        : false,
+  };
   let countIndexArray = headers.length - 1;
   let expansionIndexArray = countIndexArray - 1;
   let countIndexRange = sheetValues[0].length - 1;

@@ -200,12 +200,22 @@ async function runColourSort() {
       pname: "cbcolor",
       sname: "cbname",
     };
-    let pSort = sorters.pst ? sorters.pst : false;
-    let sSort = sorters.sst ? sorters.sst : false;
+    let pSort =
+      sorters.pst !== null || sorters.pst !== undefined ? sorters.pst : false;
+    let sSort =
+      sorters.sst !== null || sorters.sst !== undefined ? sorters.sst : false;
     let sortNames = {
-      p: sorters.pname ? sorters.pname : false,
-      s: sorters.sname ? sorters.sname : false,
+      p:
+        sorters.pname !== null || sorters.pname !== undefined
+          ? sorters.pname
+          : false,
+      s:
+        sorters.sname !== null || sorters.sname !== undefined
+          ? sorters.sname
+          : false,
     };
+    logui(`Sort settings:`);
+    logui(`${pSort} ${sSort} ${sortNames}`);
     let countIndexArray = headers.length - 1;
     let expansionIndexArray = countIndexArray - 1;
     let expansionIndex = expansionIndexArray;
