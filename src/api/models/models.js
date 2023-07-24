@@ -21,9 +21,15 @@ const sideEnum = {
 
 function getName(cardinfo, cardType) {
   if (cardType === sideEnum[2]) {
-    return sideEnum[2]
-      .replace("_a_", cardinfo["faceName"])
-      .replace("_b_", cardinfo.bside["faceName"]);
+    let returner = null;
+    if (cardinfo["faceName"]) {
+      returner = sideEnum[2].replace("_a_", cardinfo["faceName"]);
+    }
+    if (cardinfo.bside && cardinfo.bside["faceName"]) {
+      returner = sideEnum[2].replace("_b_", cardinfo.bside["faceName"]);
+    }
+    if (!returner) returner = cardinfo["name"];
+    return returner;
   }
   if (cardType === sideEnum[3]) {
     return `${cardinfo["faceName"]}//${cardinfo.bside["faceName"]}`;
@@ -289,7 +295,7 @@ const typeAdventure = (ded) => {
 };
 const typeAftermath = (ded) => {
   logui("M");
-  return new TypeFormat("aftermath", cmcEnum[3], undefined, true);
+  return new TypeFormat("aftermath", cmcEnum[3], undefined, true, sideEnum[2]);
 };
 const typeClass = (ded) => {
   logui("C");
@@ -315,7 +321,7 @@ const typeLeveler = (ded) => {
 };
 const typeMeld = (ded) => {
   logui("E");
-  return new TypeFormat("meld", cmcEnum[4], ptEnum[2], true, sideEnum[3]);
+  return new TypeFormat("meld");
 };
 const typePrototype = (ded) => {
   logui("P");
