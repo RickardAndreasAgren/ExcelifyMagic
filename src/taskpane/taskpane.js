@@ -195,7 +195,7 @@ async function runColourSort() {
     let sheetValues = range.values;
     let headers = sheetValues.shift();
     let sorters = {
-      pst: headers.indexOf("Colour"),
+      pst: headers.indexOf("Color"),
       sst: headers.indexOf("Name"),
       pname: "cbcolor",
       sname: "cbname",
@@ -210,7 +210,6 @@ async function runColourSort() {
     let expansionIndexArray = countIndexArray - 1;
     let expansionIndex = expansionIndexArray;
 
-    sheetValues = await ensureColours(sheetValues, headers);
     sheetValues.sort((a, b) => {
       return threeSort(a, b, pSort, sSort, expansionIndex, sortNames);
     });

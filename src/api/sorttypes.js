@@ -8,6 +8,7 @@ function standardSort(a, b, key) {
   if (a[key] > b[key]) {
     return 1;
   }
+  return 0;
 }
 
 function isMono(colorArray) {
