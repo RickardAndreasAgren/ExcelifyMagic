@@ -221,7 +221,7 @@ export function setupCardSet(cards, setData, setupArray) {
     if (
       !!card.side &&
       card.side.toUpperCase() !== "A" &&
-      BLOCKEDLAYOUTS.includes(card.layout.toUpperCase())
+      !BLOCKEDLAYOUTS.includes(card.layout.toUpperCase())
     ) {
       logui(`B-saving ${card.name}`);
       logui(`${card}`);
