@@ -68,7 +68,7 @@ function getConvertedManaCost(cardinfo, cardType, isFace = false) {
 }
 
 export function normalizeColour(colour) {
-  const lt = colour.length;
+  const lt = colour ? colour.length : "C";
   // scrub "|"
   // ? how hybridmana?
 
@@ -104,7 +104,7 @@ function getColour(cardinfo) {
         element.length > 1
           ? normalizeColour(`${element.replaceAll("/", "")}`)
           : element;
-      if (toAdd.length > 1) {
+      if (toAdd && toAdd.length > 1) {
         storedColor.push({ to: toAdd[0], from: toAdd });
         colour += `${toAdd[0]}`;
       } else {
@@ -170,7 +170,7 @@ function getType(cardinfo) {
     : "";
   let fulltype = cardinfo.type;
   let splitType = fulltype.split(" ");
-  if (splitType.length > 1) {
+  if (splitType && splitType.length > 1) {
     if (preType.includes(splitType[0])) {
       if (splitType[1] == "—") {
         splitType.splice(1, 1);
@@ -285,9 +285,15 @@ function getSplitPt(card) {
   return pt === 2 ? ptEnum[2] : ptEnum[1];
 }
 
-const typeRegular = (ded) => {
+const typeRegular = (card) => {
   logui("R");
-  return new TypeFormat("normal");
+  if (!card.bside) {
+    return new TypeFormat("normal");
+  }
+  if (card.bside) {
+    return new TypeFormat("flip");
+  }
+  
 };
 const typeAdventure = (ded) => {
   logui("A");
@@ -333,7 +339,10 @@ const typeSaga = (ded) => {
 };
 const typeSplit = (card) => {
   logui("T");
-  if (-1 < card.keywords.findIndex((k) => k.toLowerCase() === "fuse")) {
+  if (
+    card.keywords && card.keywords.length > 1 &&
+    -1 < card.keywords.findIndex((k) => k.toLowerCase() === "fuse")
+  ) {
     return typeFuse(card);
   }
   return new TypeFormat(

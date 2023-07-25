@@ -170,7 +170,7 @@ const CARDOPTIONS = {
       // logui(`${cardinfo.typeFormat}`);
     } else {
       logui("===NO TYPEFORMAT===");
-      logui(`${JSON.stringify(cardinfo)}`);
+      logui(`${cardinfo}`);
       logui("=========");
     }
     return cardinfo.typeFormat.formatName(cardinfo);
@@ -196,11 +196,22 @@ const CARDOPTIONS = {
   },
 };
 
+function alreadyDone(cardsList, card, index) {
+  for (let i = 1; i < index + 1; i++) {
+    if (cardsList[index - i].name === card.name) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function setupCard(cardinfo, useOptions, setname, bside) {
   cardinfo["bside"] = bside;
   return new Promise((resolve) => {
+    logui(`${cardinfo.name}`);
     let cardAsArray = [];
     cardinfo.typeFormat = getTypeFromLayout(cardinfo.layout, cardinfo);
+    logui(`${cardinfo.typeFormat.name}`);
     for (let opt = 0; opt < useOptions.length; opt++) {
       cardAsArray.push(CARDOPTIONS[useOptions[opt]](cardinfo));
     }
@@ -234,11 +245,12 @@ export function setupCardSet(cards, setData, setupArray) {
 
   logui("Adapting card data for excelifymagic.");
   logui(`using ${setData.props}`);
-  cardsList.forEach((card) => {
+  cardsList.forEach((card, index) => {
+    if (alreadyDone(cardsList, card, index)) return;
     const bside = bsides.find((bcard) => {
       if (
         !Object.keys(bcard).includes("otherFaceIds") ||
-        bcard.otherFaceIds.length < 1
+        (bcard.otherFaceIds && bcard.otherFaceIds.length < 1)
       ) {
         return false;
       }

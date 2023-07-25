@@ -339,6 +339,11 @@ export async function prepareSet(setData) {
     .catch((error) => {
       logui("<<<<<<< rejection hit >>>>>>");
       printerror(error.message);
+      printerror(error);
+      if (error.stacktrace) {
+        printerror(error.stacktrace);
+      }
+      logui("rethrow");
       throw error;
     })
     .then((cardArray) => {
@@ -394,6 +399,7 @@ export async function prepareSet(setData) {
     .catch((error) => {
       logui("<<<<<<< options and sorting failure >>>>>>");
       printerror(error.message);
+      printerror(error);
       throw error;
     });
 }
