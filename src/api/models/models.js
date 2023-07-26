@@ -49,19 +49,19 @@ function getConvertedManaCost(cardinfo, cardType, isFace = false) {
 
   if (cardType === cmcEnum[2]) {
     let cost = cmcEnum[2].replace("_a_", usedValue).replace("_b_", bside);
-    return bside && (bside.length > 0 || bside > 0)
+    return bside && (bside.length > 0 || bside > -1)
       ? cost
       : cost.replace(" + ", "");
   }
   if (cardType === cmcEnum[3]) {
     let cost = cmcEnum[3].replace("_a_", usedValue).replace("_b_", bside);
-    return bside && (bside.length > 0 || bside > 0)
+    return bside && (bside.length > 0 || bside > -1)
       ? cost
       : cost.replace(" // ", "");
   }
   if (cardType === cmcEnum[4]) {
     let cost = cmcEnum[4].replace("_a_", usedValue).replace("_face_", bside);
-    return bside && (bside.length > 0 || bside > 0)
+    return bside && (bside.length > 0 || bside > -1)
       ? cost
       : cost.replace(" // ", "");
   }
