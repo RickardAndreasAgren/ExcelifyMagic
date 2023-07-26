@@ -239,7 +239,7 @@ export function setupCardSet(cards, setData, setupArray) {
       bsides.push(card);
       return;
     }
-    
+
     cardsList.push(card);
   });
 

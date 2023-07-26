@@ -39,13 +39,14 @@ function getName(cardinfo, cardType) {
 
 function getConvertedManaCost(cardinfo, cardType, isFace = false) {
   const bside = cardinfo.bside
-    ? getConvertedManaCost(cardinfo.bside, false, true)
+    ? getConvertedManaCost(cardinfo.bside, cmcEnum[1], isFace)
     : "";
 
   const usedValue =
-    isFace || (bside && (bside.length > 0 || bside > 0))
+    isFace && cardinfo["faceManaValue"]
       ? cardinfo["faceManaValue"]
       : cardinfo["manaValue"];
+
   if (cardType === cmcEnum[2]) {
     let cost = cmcEnum[2].replace("_a_", usedValue).replace("_b_", bside);
     return bside && (bside.length > 0 || bside > 0)
@@ -246,6 +247,9 @@ export class TypeFormat {
   }
 
   formatManaValue(card) {
+    if (this.name === "flip") {
+      return getConvertedManaCost(card, this.manaCostFormat, false);
+    }
     return getConvertedManaCost(card, this.manaCostFormat);
   }
 
@@ -290,10 +294,9 @@ const typeRegular = (card) => {
   if (!card.bside) {
     return new TypeFormat("normal");
   }
-  if (card.bside) {
-    return new TypeFormat("flip");
+  if (card.bside && card.bside.name) {
+    return typeFlip(card);
   }
-  
 };
 const typeAdventure = (ded) => {
   logui("A");
@@ -307,9 +310,15 @@ const typeClass = (ded) => {
   logui("C");
   return new TypeFormat("class");
 };
-const typeFlip = (ded) => {
+const typeFlip = (card) => {
   logui("P");
-  return new TypeFormat("flip");
+  return new TypeFormat(
+    "flip",
+    cmcEnum[3],
+    getSplitPt(card),
+    true,
+    sideEnum[2]
+  );
 };
 const typeFuse = (card) => {
   logui("F");
