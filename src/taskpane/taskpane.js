@@ -254,18 +254,17 @@ export async function renderSetCards() {
   document.getElementById("logpoint").innerHTML = "";
   return buildSet()
     .then((data) => {
-      return Excel.run(function (context) {
+      return Excel.run(async (context) => {
         if (newSheet) {
           var sheets = context.workbook.worksheets;
           logui(data.name);
-          var sheet = sheets.add(data.name);
+          var sheet = sheets.add(data.name.replaceAll(" ", ""));
           sheet.activate();
           sheet.load("name, position");
           sheet.position = 0;
         }
-        return context.sync().then(function () {
-          return data;
-        });
+        await context.sync();
+        return data;
       });
     })
     .then((data) => {
