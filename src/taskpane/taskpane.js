@@ -23,6 +23,7 @@ import {
   getSelectedProps,
 } from "../api/excelifyapi.js";
 import { threeSort } from "../api/sorttypes.js";
+import { tableSortColorMTG } from "src/api/sortcustomlist.js";
 
 var format = "pioneer";
 
@@ -180,6 +181,12 @@ export async function selectFormat() {
 }
 
 async function runColourSort() {
+  await Excel.run(async (context) => {
+    tableSortColorMTG(context);
+  });
+}
+
+async function runColourSortNoTable() { 
   await Excel.run(async (context) => {
     var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
 

@@ -220,6 +220,41 @@ export const threebos = [
 
 export const fourbos = ["BGRU", "GRUW", "RUWB", "UWBG", "WBGR"];
 
+export const colorOrdering = [
+  ["|", "0"],
+  ["B", "1"],
+  ["BG", "2"],
+  ["BGR", "3"],
+  ["BGRU", "4"],
+  ["BGU", "5"],
+  ["BR", "6"],
+  ["C", "7"],
+  ["G", "8"],
+  ["GR", "9"],
+  ["GRU", "a"],
+  ["GRUW", "b"],
+  ["GRW", "c"],
+  ["GU", "d"],
+  ["R", "e"],
+  ["RU", "f"],
+  ["RUW", "g"],
+  ["RUWB", "h"],
+  ["RUB", "i"],
+  ["RW", "j"],
+  ["U", "k"],
+  ["UW", "l"],
+  ["UWB", "m"],
+  ["UWBG", "n"],
+  ["UWG", "o"],
+  ["UB", "p"],
+  ["W", "q"],
+  ["WB", "r"],
+  ["WBG", "s"],
+  ["WBGR", "t"],
+  ["WBR", "u"],
+  ["WG", "v"],
+];
+
 export class TypeFormat {
   constructor(
     name,
