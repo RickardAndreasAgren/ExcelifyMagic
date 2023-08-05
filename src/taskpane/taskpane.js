@@ -7,7 +7,7 @@
 /* global Office document Excel */
 
 import { printcell } from "../util/printcell.js";
-import { printfield, clearRange, ensureColours } from "../util/printfield.js";
+import { printfield, clearRange } from "../util/printfield.js";
 import { numberToLetters } from "../util/columnconverter.js";
 import { printerror } from "../util/printui.js";
 import { logui } from "../util/printui.js";
@@ -23,7 +23,7 @@ import {
   getSelectedProps,
 } from "../api/excelifyapi.js";
 import { threeSort } from "../api/sorttypes.js";
-import { tableSortColorMTG } from "src/api/sortcustomlist.js";
+import { tableSortColorMTG } from "../api/sortcustomlist.js";
 
 var format = "pioneer";
 
