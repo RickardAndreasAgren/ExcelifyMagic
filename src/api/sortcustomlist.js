@@ -67,7 +67,7 @@ async function plusColumn(address) {
   }
   let letter = address.substring(0, 1);
   let shiftedNumber = await lettersToNumber(letter);
-  let shiftedLetter = await numberToLetters(shiftedNumber + 1);
+  let shiftedLetter = await numberToLetters(shiftedNumber);
   let returner = `${shiftedLetter}${address.substring(1)}`;
   return returner;
 }
@@ -107,7 +107,6 @@ async function ensureSortColorTable(context, metaSheet) {
     tryTable = metaSheet.tables.add(headerstring, true);
     tryTable.name = colorAlphabetTableName;
     tryTable.getHeaderRowRange().values = [["Key", "Value"]];
-    await context.sync();
     tryTable.rows.add(null, charcolorMap);
     await context.sync();
   }
