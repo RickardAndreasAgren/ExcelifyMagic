@@ -103,16 +103,12 @@ async function ensureSortColorTable(context, metaSheet) {
 
     let sortcoloraddress = { 0: sortcoloraddressKey, 1: sortcoloraddressValue };
     const charcolorMap = colorOrdering;
-    const headerstring = `${sortcoloraddress[0]}${sortcoloraddress[1]}`;
+    const headerstring = `${sortcoloraddress[0]}:${sortcoloraddress[1]}`;
     tryTable = metaSheet.tables.add(headerstring, true);
     tryTable.name = colorAlphabetTableName;
     tryTable.getHeaderRowRange().values = [["Key", "Value"]];
+    await context.sync();
     tryTable.rows.add(null, charcolorMap);
-
-    if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
-      metaSheet.getUsedRange().format.autofitColumns();
-      metaSheet.getUsedRange().format.autofitRows();
-    }
     await context.sync();
   }
   return tryTable;
