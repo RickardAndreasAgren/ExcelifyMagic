@@ -182,11 +182,15 @@ export async function selectFormat() {
 
 async function runColourSort() {
   await Excel.run(async (context) => {
-    tableSortColorMTG(context);
+    return await tableSortColorMTG(context).catch((error) => {
+      logui("error caught");
+      printerror(error);
+      printerror(error.message);
+    });
   });
 }
 
-async function runColourSortNoTable() { 
+async function runColourSortNoTable() {
   await Excel.run(async (context) => {
     var currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
 
