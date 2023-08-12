@@ -25,17 +25,13 @@ async function ensureMetasheet(context, sheets) {
 async function searchForValueHeader(context, range, name) {
   let checkedIndexes = [];
   for (let i = 1; i < range.rowCount; i++) {
-    logui(`i: ${i}`);
     for (let c = 1; c < range.columnCount; c++) {
-      logui(`c: ${c}`)
       let xTarget = await numberToLetters(c + 1);
-      logui(`${xTarget}`);
       if (-1 < checkedIndexes.indexOf(xTarget)) continue;
 
       let value = range.values[i][c];
-      logui(`${value}`);
-      logui(`${xTarget + i}`);
-      if (value == name) return `${xTarget + i}`;
+      let yTarget = i + 1;
+      if (value == name) return `${xTarget + yTarget}`;
       if (value.length > 0) checkedIndexes.push(xTarget);
     }
   }
@@ -43,35 +39,37 @@ async function searchForValueHeader(context, range, name) {
 }
 
 async function selectColumnPoint(context, metaRange) {
-  let headerCell = await searchForValueHeader(
+  let tablePoint = await searchForValueHeader(
     context,
     metaRange,
     colorAlphabetTableName
   );
-  logui("aa");
-  if (headerCell === "") {
-    let columnTarget = numberToLetters(metaRange.columnCount + 2);
-    logui("ab");
+  let headerCell = "";
+  if (tablePoint === "") {
+    let columnTarget = await numberToLetters(metaRange.columnCount + 2);
     let cell = metaRange.getCell(columnTarget + "1");
-    logui("ac");
     cell.load(["values", "address"]);
     await context.sync();
     cell.values[0][0] = colorAlphabetTableName;
-    headerCell = cell;
-    logui("ad");
+    headerCell = cell.address;
     await context.sync();
+  } else {
+    headerCell = `${tablePoint.substring(0, 1)}${
+      1 + parseInt(tablePoint.substring(1))
+    }`;
   }
-  return headerCell.address;
+  return headerCell;
 }
 
-function plusColumn(address) {
-  if (address && address.length !== 2) {
+async function plusColumn(address) {
+  if (address && address.length < 2) {
     throw new Error("Bad address for plusColumn");
   }
   let letter = address.substring(0, 1);
-  return `${numberToLetters(lettersToNumber(letter) + 1)}${address.substring(
-    1
-  )}`;
+  let shiftedNumber = await lettersToNumber(letter);
+  let shiftedLetter = await numberToLetters(shiftedNumber + 1);
+  let returner = `${shiftedLetter}${address.substring(1)}`;
+  return returner;
 }
 
 async function createTable(context, workbook, worksheet) {
@@ -95,6 +93,7 @@ async function ensureSortColorTable(context, metaSheet) {
     "rowIndex",
     "columnCount",
     "rowCount",
+    "address",
   ]);
   await context.sync();
   // eslint-disable-next-line office-addins/load-object-before-read
@@ -104,24 +103,18 @@ async function ensureSortColorTable(context, metaSheet) {
 
     let sortcoloraddress = { 0: sortcoloraddressKey, 1: sortcoloraddressValue };
     const charcolorMap = colorOrdering;
-    const headerstring = `${sortcoloraddress[0].substring(
-      0,
-      1
-    )}1${sortcoloraddress[1].substring(0, 1)}1`;
+    const headerstring = `${sortcoloraddress[0]}${sortcoloraddress[1]}`;
     tryTable = metaSheet.tables.add(headerstring, true);
     tryTable.name = colorAlphabetTableName;
-    logui("g");
-    tryTable.getHeaderRowRange().values = ["Color", "Value"];
+    tryTable.getHeaderRowRange().values = [["Key", "Value"]];
     tryTable.rows.add(null, charcolorMap);
 
     if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
       metaSheet.getUsedRange().format.autofitColumns();
       metaSheet.getUsedRange().format.autofitRows();
     }
-    logui("h");
     await context.sync();
   }
-  logui("f");
   return tryTable;
 }
 
@@ -166,15 +159,12 @@ async function setColumnCellsFormula(context, sortColumnRange, columnColor) {
 }
 
 export async function tableSortColorMTG(context) {
-  logui("a");
   let sheets = context.workbook.worksheets;
   sheets.load("items/name");
   await context.sync();
 
-  logui("Ensuring metasheet");
   let metaSheet = await ensureMetasheet(context, sheets);
 
-  logui(`${metaSheet?.name ?? "Nope"}`);
   logui("Ensuring SortColor table");
   let colorTable = await ensureSortColorTable(context, metaSheet).catch(
     (error) => {
@@ -188,13 +178,15 @@ export async function tableSortColorMTG(context) {
   currentWorksheet.load("name");
 
   let currentTable = false;
-  let tables = context.workbook.getTables();
-  tables.load("items/name");
+  let tables = context.workbook.tables;
+  tables.load(["items/name"]);
   await context.sync();
 
   logui("Seeking for ztable");
-  tables.items.forEach(function (table) {
+  tables.items.forEach(async function (table) {
     let checkSheet = table.worksheet;
+    checkSheet.load("name");
+    await context.sync();
     if (
       table.name.toLowerCase().includes("ztable") &&
       checkSheet.name === currentWorksheet.name
@@ -220,7 +212,7 @@ export async function tableSortColorMTG(context) {
   logui("Getting color column");
   for (let i = 1; i < headers.columnCount + 1; i++) {
     if (headers.values[0][i] === "Color") {
-      columnColor = numberToLetters(i);
+      columnColor = await numberToLetters(i);
       break;
     }
   }
@@ -232,7 +224,7 @@ export async function tableSortColorMTG(context) {
   logui("Checking for existing ColorSort column.");
   if (headers[headers.columnCount - 3].value == "ColorSort") {
     hasColorColumn = true;
-    columnTarget = numberToLetters(headers.columnCount - 3);
+    columnTarget = await numberToLetters(headers.columnCount - 3);
   }
 
   currentTable.load(["rowIndex", "rowCount", "address"]);
@@ -249,9 +241,8 @@ export async function tableSortColorMTG(context) {
   }
 
   logui("Resizing table");
-  currentTable.resize(
-    `A2:${numberToLetters(headers.columnCount + 1)}${currentTable.rowCount + 1}`
-  );
+  let hLetter = await numberToLetters(headers.columnCount + 1);
+  currentTable.resize(`A2:${hLetter}${currentTable.rowCount + 1}`);
   await context.sync();
 
   logui("Filling column with formulas");
