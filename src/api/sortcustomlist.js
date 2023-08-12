@@ -194,7 +194,7 @@ export async function tableSortColorMTG(context) {
   await context.sync();
 
   logui("Seeking for ztable");
-  let currentTable = getWorksheetZable(context, tables, currentWorksheet);
+  let currentTable = await getWorksheetZable(context, tables, currentWorksheet);
 
   if (!currentTable) {
     logui("Creating ztable");
@@ -222,7 +222,7 @@ export async function tableSortColorMTG(context) {
   }
 
   logui("Checking for existing ColorSort column.");
-  if (headers[headers.columnCount - 3].value == "ColorSort") {
+  if (headers.values[0][headers.columnCount - 3 - 1] === "ColorSort") {
     hasColorColumn = true;
     columnTarget = await numberToLetters(headers.columnCount - 3);
   }
