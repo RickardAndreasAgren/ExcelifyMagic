@@ -72,13 +72,12 @@ async function plusColumn(address) {
   return returner;
 }
 
-async function createTable(context, workbook, worksheet) {
+async function createTable(context, worksheet) {
   let uRange = worksheet.getUsedRange();
   uRange.load(["address"]);
   await context.sync();
 
   let rangeString = `A2${uRange.address.substring(2)}`;
-
   return context.workbook.tables.add(rangeString, false);
 }
 
@@ -153,6 +152,24 @@ async function setColumnCellsFormula(context, sortColumnRange, columnColor) {
   }
 }
 
+async function getWorksheetZable(context, tables, cSheet) {
+  for (let i = 0; i < tables.count; i++) {
+    let table = tables.items[i];
+    let checkSheet = table.worksheet;
+    checkSheet.load("name");
+    table.load("name");
+    await context.sync();
+    if (
+      table.name.toLowerCase().includes("ztable") &&
+      checkSheet.name === cSheet.name
+    ) {
+      logui("Got table");
+      return table;
+    }
+  }
+  return false;
+}
+
 export async function tableSortColorMTG(context) {
   let sheets = context.workbook.worksheets;
   sheets.load("items/name");
@@ -172,24 +189,12 @@ export async function tableSortColorMTG(context) {
   let currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
   currentWorksheet.load("name");
 
-  let currentTable = false;
   let tables = context.workbook.tables;
   tables.load(["items/name"]);
   await context.sync();
 
   logui("Seeking for ztable");
-  tables.items.forEach(async function (table) {
-    let checkSheet = table.worksheet;
-    checkSheet.load("name");
-    await context.sync();
-    if (
-      table.name.toLowerCase().includes("ztable") &&
-      checkSheet.name === currentWorksheet.name
-    ) {
-      logui("Got table");
-      currentTable = table;
-    }
-  });
+  let currentTable = getWorksheetZable(context, tables, currentWorksheet);
 
   if (!currentTable) {
     logui("Creating ztable");
