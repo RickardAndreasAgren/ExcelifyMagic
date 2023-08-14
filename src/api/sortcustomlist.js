@@ -6,7 +6,7 @@ import { printerror } from "../util/printui.js";
 const colorAlphabetWorksheetName = "Meta";
 const colorAlphabetTableName = "SortColor";
 
-/* global Office */
+/* global Excel */
 
 async function ensureMetasheet(context, sheets) {
   let found = false;
@@ -112,13 +112,20 @@ async function ensureSortColorTable(context, metaSheet) {
   return tryTable;
 }
 
-async function setupNewColumn(context, table, columnTarget) {
-  let header = context.worksheet.getRange(`${columnTarget}1`);
+async function setupNewColumn(context, cWorksheet, table, columnTarget) {
+  let header = cWorksheet.getRange(`${columnTarget}1:${columnTarget}1`);
   header.load("values");
   await context.sync();
-  let newHeader = header.insert("Right");
-  newHeader.load("values");
-  newHeader.value = "SortColor";
+  let newHeader = await header.insert(Excel.InsertShiftDirection.right);
+  newHeader.load([
+    "columnIndex",
+    "rowIndex",
+    "columnCount",
+    "rowCount",
+    "address",
+  ]);
+  await context.sync();
+  newHeader.values[0][0] = "SortColor";
   await context.sync();
 
   let range = table.getRange();
@@ -222,17 +229,23 @@ export async function tableSortColorMTG(context) {
   }
 
   logui("Checking for existing ColorSort column.");
-  if (headers.values[0][headers.columnCount - 3 - 1] === "ColorSort") {
+  if (headers.values[0][headers.columnCount - 1 - 2] === "ColorSort") {
     hasColorColumn = true;
-    columnTarget = await numberToLetters(headers.columnCount - 3);
+    columnTarget = await numberToLetters(headers.columnCount - 1 - 2);
   }
 
   currentTable.load(["rowIndex", "rowCount", "address"]);
   await context.sync();
   let sortColumnRange;
   if (!hasColorColumn) {
+    columnTarget = await numberToLetters(headers.columnCount - 1 - 1);
     logui("Creating ColorSort column");
-    sortColumnRange = await setupNewColumn(context, currentTable, columnTarget);
+    sortColumnRange = await setupNewColumn(
+      context,
+      currentWorksheet,
+      currentTable,
+      columnTarget
+    );
   } else {
     logui("Selecting ColorSort column");
     sortColumnRange = currentWorksheet.getRange(
