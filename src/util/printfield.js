@@ -80,14 +80,13 @@ export async function printfield(twoDimArray, newSheet, format) {
           const saveName = name;
           for (const [key, value] of Object.entries(blocks)) {
             if (key != saveName) {
-              logui(`Preparing ${key}`);
+              logui(`Preparing ${key} with ${value}`);
               const regex = /(\s)/i;
               let safeKey = key.replace(regex, "_");
               // check against sheet name, set name when found
               logui(`Transformed key to ${safeKey}`);
               let checkSheets =
                 context.workbook.worksheets.getItemOrNullObject(safeKey);
-              checkSheets.load();
               await context.sync();
               if (checkSheets.isNullObject && !checkSheets.isNullObject) {
                 logui("Activating sheet");
@@ -219,6 +218,7 @@ export async function clearRange(context, rangeBusy) {
   }
 }
 
+/*
 async function lookupSheetColumnCount(context, currentWorksheet, maxX) {
   let rangeString = `A1:${maxX}1`;
   logui("A");
@@ -227,9 +227,9 @@ async function lookupSheetColumnCount(context, currentWorksheet, maxX) {
 
   await context.sync();
   let usedRange;
-}
+}*/
 
-async function blockSheet(context, name, arraySizeX, arraySizeY) {
+async function blockSheet(context, name) {
   let ownerset = false;
   // check if block worksheet
   //  -more than one expansion name?
@@ -292,7 +292,7 @@ async function blockSheet(context, name, arraySizeX, arraySizeY) {
   return expansions;
 }
 
-async function saveCounts(context, range, twoDimArray, arraySizeX) {
+async function saveCounts(context, range, twoDimArray) {
   // get sort priority, (always starts with expansion)
   range.load("values");
   await context.sync();

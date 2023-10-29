@@ -112,51 +112,18 @@ async function ensureSortColorTable(context, metaSheet) {
   return tryTable;
 }
 
-async function setupNewColumn(context, cWorksheet, table, columnTarget) {
-  let header = cWorksheet.getRange(`${columnTarget}1:${columnTarget}1`);
-  header.load("values");
+async function setupNewColumn(context, table, targetColumn) {
+  let column = table.columns.add(targetColumn, null, colorAlphabetTableName);
   await context.sync();
-  let newHeader = await header.insert(Excel.InsertShiftDirection.right);
-  newHeader.load([
-    "columnIndex",
-    "rowIndex",
-    "columnCount",
-    "rowCount",
-    "address",
-  ]);
-  await context.sync();
-  newHeader.values[0][0] = "SortColor";
-  await context.sync();
-
-  let range = table.getRange();
-  range.load(["values", "columnIndex", "rowIndex", "columnCount", "rowCount"]);
-  await context.sync();
-
-  let rangeTarget = context.worksheet.getRange(
-    `${columnTarget}2:${columnTarget}${table.rowCount + 1}`
-  );
-
-  return rangeTarget.insert("Right");
+  return column.getDataBodyRange();
 }
 
 async function setColumnCellsFormula(context, sortColumnRange, columnColor) {
-  sortColumnRange.load([
-    "values",
-    "columnIndex",
-    "rowIndex",
-    "columnCount",
-    "rowCount",
-  ]);
-  await context.sync();
+  logui("ccf");
   const ccr = columnColor;
-
-  for (let i = 0; i < sortColumnRange.rowCount; i++) {
-    sortColumnRange.values[
-      i
-    ][0] = `=TEXTJOIN("",,XLOOKUP(MID([@Text],ROW($${ccr}$1:INDEX($${ccr}:$${ccr},LEN(${
-      ccr + i.toString()
-    }))),1),${colorAlphabetTableName}[Color],${colorAlphabetTableName}[Value],0))`;
-  }
+  let copyMe = `=TEXTJOIN("",,XLOOKUP(MID([@Color],ROW($${ccr}$1:INDEX($${ccr}:$${ccr},LEN(${ccr}2))),1),${colorAlphabetTableName}[Key],${colorAlphabetTableName}[Value],0))`;
+  logui("Copy this to row 2 in the new SortColor column:");
+  logui(copyMe);
 }
 
 async function getWorksheetZable(context, tables, cSheet) {
@@ -185,13 +152,11 @@ export async function tableSortColorMTG(context) {
   let metaSheet = await ensureMetasheet(context, sheets);
 
   logui("Ensuring SortColor table");
-  let colorTable = await ensureSortColorTable(context, metaSheet).catch(
-    (error) => {
-      logui("error caught");
-      printerror(`${error}`);
-      printerror(`${error.message}`);
-    }
-  );
+  await ensureSortColorTable(context, metaSheet).catch((error) => {
+    logui("error caught");
+    printerror(`${error}`);
+    printerror(`${error.message}`);
+  });
 
   let currentWorksheet = context.workbook.worksheets.getActiveWorksheet();
   currentWorksheet.load("name");
@@ -229,34 +194,38 @@ export async function tableSortColorMTG(context) {
   }
 
   logui("Checking for existing ColorSort column.");
-  if (headers.values[0][headers.columnCount - 1 - 2] === "ColorSort") {
+  if (
+    headers.values[0][headers.columnCount - 1 - 2] === colorAlphabetTableName
+  ) {
     hasColorColumn = true;
     columnTarget = await numberToLetters(headers.columnCount - 1 - 2);
   }
 
-  currentTable.load(["rowIndex", "rowCount", "address"]);
+  currentTable.load([
+    "values",
+    "columnCount",
+    "columnIndex",
+    "rowIndex",
+    "rowCount",
+    "address",
+  ]);
   await context.sync();
   let sortColumnRange;
   if (!hasColorColumn) {
-    columnTarget = await numberToLetters(headers.columnCount - 1 - 1);
     logui("Creating ColorSort column");
     sortColumnRange = await setupNewColumn(
       context,
-      currentWorksheet,
       currentTable,
-      columnTarget
+      headers.columnCount - 1 - 1
     );
   } else {
-    logui("Selecting ColorSort column");
-    sortColumnRange = currentWorksheet.getRange(
-      `${columnTarget}2:${columnTarget}${currentTable.rowCount + 1}`
-    );
+    let currentTableRange = currentTable.getRange();
+    currentTableRange.load(["rowCount", "address"]);
+    await context.sync();
+    let rangeString = `${columnTarget}2:${columnTarget}${currentTableRange.rowCount}`;
+    logui(`Selecting ColorSort column ${rangeString}`);
+    sortColumnRange = currentWorksheet.getRange(rangeString);
   }
-
-  logui("Resizing table");
-  let hLetter = await numberToLetters(headers.columnCount + 1);
-  currentTable.resize(`A2:${hLetter}${currentTable.rowCount + 1}`);
-  await context.sync();
 
   logui("Filling column with formulas");
   await setColumnCellsFormula(context, sortColumnRange, columnColor);
