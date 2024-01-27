@@ -1,0 +1,396 @@
+
+Function SortInput(splitString() As String, cLength As Integer, arrayKeys As Variant, arrayValues As Variant)
+    Dim returner() As String
+    ReDim returner(1 To cLength)
+    If 2 > cLength Then
+        returner(1) = splitString(1)
+    End If
+    If 1 < cLength Then
+        Dim translated As Variant
+        Dim sorted As Variant
+        Dim asString As String
+        asString = ""
+        
+        ReDim translated(1 To cLength)
+        ReDim sorted(1 To cLength)
+        For i = 1 To cLength
+            translated(i) = KeyToValue(splitString(i), arrayKeys, arrayValues)
+        Next i
+        sorted = QuickSort(translated, 1, cLength)
+        
+        For i = 1 To cLength
+            asString = CStr(sorted(i))
+            returner(i) = ValueToKey(asString, arrayKeys, arrayValues)
+        Next i
+    End If
+    SortInput = returner
+End Function
+
+Function QuickSort(vArray As Variant, inLow As Integer, inHi As Integer)
+  Dim pivot   As Variant
+  Dim tmpSwap As Variant
+  Dim tmpLow  As Integer
+  Dim tmpHi   As Integer
+
+  tmpLow = inLow
+  tmpHi = inHi
+
+  pivot = vArray((inLow + inHi) \ 2)
+
+  While (tmpLow <= tmpHi)
+     While (vArray(tmpLow) < pivot And tmpLow < inHi)
+        tmpLow = tmpLow + 1
+     Wend
+
+     While (pivot < vArray(tmpHi) And tmpHi > inLow)
+        tmpHi = tmpHi - 1
+     Wend
+
+     If (tmpLow <= tmpHi) Then
+        tmpSwap = vArray(tmpLow)
+        vArray(tmpLow) = vArray(tmpHi)
+        vArray(tmpHi) = tmpSwap
+        tmpLow = tmpLow + 1
+        tmpHi = tmpHi - 1
+     End If
+  Wend
+
+  If (inLow < tmpHi) Then QuickSort vArray, inLow, tmpHi
+  If (tmpLow < inHi) Then QuickSort vArray, tmpLow, inHi
+  QuickSort = vArray
+End Function
+
+Function CompactKeyToValue(colorString As String, arrayKeys As Variant, arrayValues As Variant, cLength As Long) As String
+    Dim colorOptions As Variant
+    Dim colorOptionsLength As Long
+    Dim colorOptionString As String
+    Dim matches As Long
+    Dim rowIndex As Long
+    colorOptions = GetColorOptionsByLength(cLength, arrayKeys)
+    
+    colorOptionsLength = UBound(colorOptions, 1) - LBound(colorOptions, 1) + 1
+    
+    For i = 1 To colorOptionsLength
+        matches = 0
+        For c = 1 To cLength
+            If InStr(colorString, colorOptions(i)(c)) > 0 Then matches = matches + 1
+        Next c
+        
+        If matches = cLength Then
+            colorOptionString = ""
+            For c = 1 To cLength
+                colorOptionString = colorOptionString & colorOptions(i)(c)
+            Next c
+            rowIndex = Application.Match(colorOptionString, arrayKeys, False)
+            GoTo CompactKeyToValueComplete
+        End If
+    Next i
+    
+CompactKeyToValueComplete:
+    CompactKeyToValue = arrayValues(rowIndex, 1)
+End Function
+
+Function KeyToValue(colorSymbol As String, arrayKeys As Variant, arrayValues As Variant) As String
+    Dim rowIndex As Long
+    rowIndex = Application.Match(colorSymbol, arrayKeys, False)
+    KeyToValue = arrayValues(rowIndex, 1)
+End Function
+
+Function ValueToKey(colorChar As String, arrayKeys As Variant, arrayValues As Variant) As String
+    Dim rowIndex As Long
+    rowIndex = Application.Match(colorChar, arrayValues, False)
+    ValueToKey = arrayKeys(rowIndex, 1)
+End Function
+
+Function ExtractColors(ByRef currentColors As String, ByRef extractedColors As String, arrayKeys As Variant, arrayValues As Variant, mainMode As Integer)
+    Dim newExtraction As String
+    Dim remainingColors As String
+    Dim firstColor As String
+    Dim selectedColor As String
+    Dim rowIndex As Long
+    Dim converted As String
+    
+    remainingColors = currentColors
+    ccLength = Len(currentColors)
+    firstColor = Mid(currentColors, 1, 1)
+    
+    If mainMode = 1 Then
+        For i = 1 To ccLength
+            selectedColor = Mid(currentColors, i, 1)
+            If firstColor = selectedColor Then
+                newExtraction = newExtraction & selectedColor
+                remainingColors = Replace(remainingColors, selectedColor, "", 1, 1)
+            End If
+        Next i
+    End If
+    
+    If mainMode = 2 Then
+        For i = 1 To ccLength
+            selectedColor = Mid(currentColors, i, 1)
+            If firstColor = selectedColor And i > 1 Then GoTo JustOne
+            firstColor = selectedColor
+            newExtraction = newExtraction & selectedColor
+            remainingColors = Replace(remainingColors, selectedColor, "", 1, 1)
+        Next i
+    End If
+JustOne:
+    
+    currentColors = remainingColors
+    extractedColors = newExtraction
+End Function
+
+Function EnsureStringVariant(ByRef ipArgs As Variant)
+    Dim size As Long
+    size = UBound(ipArgs, 1) - LBound(ipArgs, 1)
+    
+    For i = 1 To size
+        If VarType(ipArgs(i, 1)) = vbInteger Then
+            ipArgs(i, 1) = CStr(ipArgs(i, 1))
+        End If
+        If VarType(ipArgs(i, 1)) = vbDouble Then
+            ipArgs(i, 1) = CStr(ipArgs(i, 1))
+        End If
+        If VarType(ipArgs(i, 1)) = vbLong Then
+            ipArgs(i, 1) = CStr(ipArgs(i, 1))
+        End If
+    Next i
+End Function
+
+Function Stripface(ByRef colors As String)
+    Dim splitString() As String
+    splitString = Split(colors, "/")
+    colors = splitString(0)
+End Function
+
+Function splitColor(color As String) As Variant
+    Dim length As Long
+    length = Len(color)
+    Dim stringArray() As Variant
+    ReDim stringArray(1 To length)
+    
+    For i = 1 To length
+        stringArray(i) = Mid(color, i, 1)
+    Next i
+    splitColor = stringArray
+End Function
+
+Function GetColorOptionsByLength(useLength As Long, colorKeys As Variant)
+    Dim options() As Variant
+    Dim keys, oi As Long
+    Dim keyLength As Long
+    Dim toSplit As String
+    oi = 1
+    keys = UBound(colorKeys, 1) - LBound(colorKeys, 1) + 1
+    
+    For i = 2 To keys
+        keyLength = Len(colorKeys(i, 1))
+        If keyLength = useLength Then
+            ReDim Preserve options(1 To oi)
+            toSplit = colorKeys(i, 1)
+            options(oi) = splitColor(toSplit)
+            oi = oi + 1
+        End If
+    Next i
+    GetColorOptionsByLength = options
+End Function
+
+Function OrderColors(inColors As String, cLength As Long, sortKeys As Variant, sortValues As Variant, ByRef ordered)
+    Dim splitInColors() As String
+    ReDim splitInColors(1 To Len(inColors))
+    For i = 1 To Len(inColors)
+        splitInColors(i) = Mid$(inColors, i, 1)
+    Next i
+        
+    Dim what() As String
+    ReDim what(cLength)
+    what = OrderColorCombination(splitInColors, sortKeys, sortValues, cLength)
+    For c = 1 To cLength
+        ordered(c) = what(c)
+    Next c
+End Function
+
+Function OrderColorCombination(splitInColors() As String, sortKeys As Variant, sortValues As Variant, cLength As Long)
+    Dim colorOptions As Variant
+    Dim holdLetter As String
+    
+    Dim mergedString As String
+    Dim optionAsString As String
+    colorOptions = GetColorOptionsByLength(cLength, sortKeys)
+    Dim matchesNeeded As Long
+    Dim matches As Integer
+    matchesNeeded = cLength
+    Dim colorOptionsLength As Long
+    Dim rowIndex As Long
+    Dim ordered() As String
+    ReDim ordered(1 To cLength)
+    Dim doneOrdered As Boolean
+    doneOrdered = False
+    colorOptionsLength = UBound(colorOptions, 1) - LBound(colorOptions, 1) + 1
+    
+    For i = 1 To colorOptionsLength
+        mergedString = ""
+        For m = 1 To cLength
+            mergedString = mergedString & splitInColors(m)
+        Next m
+        For c = 1 To cLength
+            If InStr(Mid(mergedString, c, 1), colorOptions(i)(c)) > 0 Then matches = matches + 1
+        Next c
+        If Not matches = matchesNeeded Then
+            matches = 0
+            optionAsString = ""
+            For m = 1 To cLength
+                optionAsString = optionAsString & colorOptions(i)(m)
+            Next m
+            For c = 1 To cLength
+                If InStr(optionAsString, Mid(mergedString, c, 1)) > 0 Then matches = matches + 1
+            Next c
+        End If
+        
+        If matches = matchesNeeded Then
+            For j = 1 To cLength
+                rowIndex = Application.Match(Mid(mergedString, j, 1), sortKeys, False)
+                ordered(j) = sortValues(rowIndex, 1)
+            Next j
+            Exit For
+        End If
+        matches = 0
+    Next i
+    
+    
+    
+    OrderColorCombination = ordered
+End Function
+        
+Function SPLITD(refCell As Range, sortColor As Range)
+    
+    Dim arrayKeys As Variant
+    Dim arrayValues As Variant
+    arrayKeys = sortColor.Columns(1).Value
+    arrayValues = sortColor.Columns(2).Value
+
+    EnsureStringVariant arrayValues
+
+    Dim setString As String
+    setString = refCell.Cells(1, 1).Value
+    Stripface setString
+    Dim splitString() As String
+    Dim splitSingle() As String
+    Dim splitSingleFull As String
+    Dim splitSortable() As String
+    Dim convertedString As String
+    Dim convertingColor As String
+    Dim si As Long
+    Dim rowIndex As Integer
+    Dim sortStarter As Integer
+    Dim rowRange As Range
+    splitString = Split(setString, "|")
+    convertedString = ""
+    splitSingleFull = ""
+    si = UBound(splitString, 1) - LBound(splitString, 1)
+    
+    For i = 0 To si
+        convertingColor = splitString(i)
+        If Len(splitString(i)) > 1 Then
+            Dim lenSingle As Long
+            lenSingle = Len(splitString(i))
+            ReDim splitSingle(1 To lenSingle)
+            
+            For c = 1 To lenSingle
+                rowIndex = Application.Match(Mid(splitString(i), c, 1), arrayKeys, False)
+                splitSingle(c) = arrayValues(rowIndex, 1)
+            Next c
+            
+            OrderColors splitString(i), Len(splitString(i)), arrayKeys, arrayValues, splitSingle
+            convertingColor = ""
+            For c = 1 To lenSingle
+                splitSingleFull = splitSingleFull & ValueToKey(splitSingle(c), arrayKeys, arrayValues)
+            Next c
+            
+            convertingColor = CompactKeyToValue(splitSingleFull, arrayKeys, arrayValues, lenSingle)
+        End If
+        If Len(splitString(i)) = 1 Then
+            rowIndex = Application.Match(splitString(i), arrayKeys, False)
+            convertingColor = arrayValues(rowIndex, 1)
+        End If
+        convertedString = convertedString & convertingColor
+    Next i
+    
+    Dim remainingSymbols As Integer
+    Dim accIndex As Integer
+    Dim extractedCount As Long
+    Dim extractedColors As String
+    Dim orderedColors() As Variant
+    Dim extractedColorList() As String
+    Dim orderedColorsList() As String
+    Dim remainingColors As String
+    Dim resultColors As Variant
+    ReDim resultColors(1 To (si + 1))
+    remainingColors = convertedString
+    accIndex = 1
+    
+    ExtractColors remainingColors, extractedColors, arrayKeys, arrayValues, 1
+    extractedCount = Len(extractedColors)
+    If extractedCount > 0 Then
+        ReDim orderedColors(1 To extractedCount)
+        For ri = 1 To extractedCount
+            resultColors(accIndex) = Mid(extractedColors, ri, 1)
+            accIndex = accIndex + 1
+        Next ri
+    End If
+    
+    sortStarter = extractedCount
+    If (si + 1) > extractedCount Then
+        ReDim splitSortable(1 To ((si + sortStarter) - (extractedCount - 1)))
+        For i = sortStarter To si
+            splitSortable(1 + i - sortStarter) = splitString(i)
+        Next i
+        
+        splitString = SortInput(splitSortable, (si + 1 - extractedCount), arrayKeys, arrayValues)
+        remainingColors = ""
+        For i = 1 To (si + 1 - extractedCount)
+            rowIndex = Application.Match(splitString(i), arrayKeys, False)
+            remainingColors = remainingColors & arrayValues(rowIndex, 1)
+        Next i
+    End If
+    
+    Do While Len(convertedString) > accIndex - 1
+        ExtractColors remainingColors, extractedColors, arrayKeys, arrayValues, 2
+        extractedCount = Len(extractedColors)
+        If extractedCount > 0 Then
+            For ri = 1 To extractedCount
+                resultColors(accIndex) = Mid(extractedColors, ri, 1)
+                accIndex = accIndex + 1
+            Next ri
+        End If
+    Loop
+    
+    Dim addIndex As Integer
+    Dim returner As Variant
+    addIndex = 1
+    si = si + 1
+    ReDim returner(1 To (si + si - 1))
+    
+    For i = 1 To si
+        rowIndex = Application.Match(resultColors(i), arrayValues, False)
+        returner(addIndex) = arrayKeys(rowIndex, 1)
+        addIndex = addIndex + 1
+        If addIndex < si + si - 1 Then
+            returner(addIndex) = "|"
+            addIndex = addIndex + 1
+        End If
+    Next i
+    
+    Application.ScreenUpdating = True
+    SPLITD = returner
+End Function
+
+Public Sub tests()
+    Dim tTable As Range
+    Dim testCell As Range
+    Dim what As Variant
+    Set tTable = Application.ActiveWorkbook.Sheets("Meta").ListObjects("SortColor").Range
+    Set testCell = Application.ActiveWorkbook.Sheets("StrixhavenSchoolOfMages").ListObjects("ZTable21STX").Range.Cells(281, 2)
+    what = SPLITD(testCell, tTable)
+    Dim a As Long
+    a = 1
+End Sub
