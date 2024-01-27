@@ -118,12 +118,12 @@ async function setupNewColumn(context, table, targetColumn) {
   return column.getDataBodyRange();
 }
 
-async function setColumnCellsFormula(context, sortColumnRange, columnColor) {
-  logui("ccf");
-  const ccr = columnColor;
-  let copyMe = `=TEXTJOIN("",,XLOOKUP(MID([@Color],ROW($${ccr}$1:INDEX($${ccr}:$${ccr},LEN(${ccr}2))),1),${colorAlphabetTableName}[Key],${colorAlphabetTableName}[Value],0))`;
-  logui("Copy this to row 2 in the new SortColor column:");
-  logui(copyMe);
+async function setColumnCellsFormula(context, sortColumnRange) {
+  let copyMe = `=TEXTJOIN("",,XLOOKUP(SPLITD([@Color],SortColor),SortColor[Key],SortColor[Value],0))`;
+  for (let i = 0; i < sortColumnRange.length; i++) {
+    sortColumnRange[i][0].values = copyMe;
+  }
+  context.sync();
 }
 
 async function getWorksheetZable(context, tables, cSheet) {
@@ -228,6 +228,6 @@ export async function tableSortColorMTG(context) {
   }
 
   logui("Filling column with formulas");
-  await setColumnCellsFormula(context, sortColumnRange, columnColor);
+  await setColumnCellsFormula(context, sortColumnRange);
   return true;
 }
