@@ -324,9 +324,11 @@ Function SPLITD(refCell As Range, sortColor As Range)
     Dim orderedColorsList() As String
     Dim remainingColors As String
     Dim resultColors As Variant
+    Dim matchedOneTwo As Boolean
     ReDim resultColors(1 To (si + 1))
     remainingColors = convertedString
     accIndex = 1
+    matchedOneTwo = False
     
     ExtractColors remainingColors, extractedColors, arrayKeys, arrayValues, 1
     extractedCount = Len(extractedColors)
@@ -369,14 +371,24 @@ Function SPLITD(refCell As Range, sortColor As Range)
     addIndex = 1
     si = si + 1
     ReDim returner(1 To (si + si - 1))
+    If si > 1 Then
+        If resultColors(1) = resultColors(2) Then
+            matchedOneTwo = True
+            ReDim returner(1 To (si + si))
+        End If
+    End If
     
     For i = 1 To si
         rowIndex = Application.Match(resultColors(i), arrayValues, False)
         returner(addIndex) = arrayKeys(rowIndex, 1)
         addIndex = addIndex + 1
-        If addIndex < si + si - 1 Then
+        If (matchedOneTwo = True And addIndex < si + si) Or (addIndex < si + si - 1) Then
             returner(addIndex) = "|"
             addIndex = addIndex + 1
+            If matchedOneTwo = True And i = 1 Then
+                returner(addIndex) = "|"
+                addIndex = addIndex + 1
+            End If
         End If
     Next i
     

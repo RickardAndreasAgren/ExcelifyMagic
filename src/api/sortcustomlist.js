@@ -121,9 +121,9 @@ async function setupNewColumn(context, table, targetColumn) {
 async function setColumnCellsFormula(context, sortColumnRange) {
   let copyMe = `=TEXTJOIN("",,XLOOKUP(SPLITD([@Color],SortColor),SortColor[Key],SortColor[Value],0))`;
   for (let i = 0; i < sortColumnRange.length; i++) {
-    sortColumnRange[i][0].values = copyMe;
+    sortColumnRange.values[i][0] = [[copyMe]];
   }
-  context.sync();
+  await context.sync();
 }
 
 async function getWorksheetZable(context, tables, cSheet) {
